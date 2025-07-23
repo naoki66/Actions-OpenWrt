@@ -1,0 +1,145 @@
+name: imagebuilder编译24.10.2
+on: 
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'  
+  schedule:
+  - cron: "20  3 * * 1"
+
+env:
+  TZ: Asia/Shanghai
+
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+
+    - name: 删除文件
+      run: |
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+
+
+
+    - name: 显示系统情况
+      run: |
+        lscpu
+        free -h
+        df -Th
+        uname -a
+        echo "TIME1=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV
+
+    - name: 安装依赖文件
+      run: |
+        sudo -E apt update -y
+        sudo -E apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+        bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
+        git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev \
+        libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz \
+        mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools \
+        libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip zstd \
+        vim wget xmlto xxd zlib1g-dev python3-setuptools
+
+    - name: 下载imagebuilder源码
+      run: |
+        wget https://downloads.immortalwrt.org/releases/24.10.2/targets/x86/64/immortalwrt-imagebuilder-24.10.2-x86-64.Linux-x86_64.tar.zst
+        tar -I zstd -x -f immortalwrt-imagebuilder-24.10.2-x86-64.Linux-x86_64.tar.zst
+        
+
+    - name: 修改配置和编译文件
+      run: |
+        cd immortalwrt-imagebuilder-24.10.2-x86-64.Linux-x86_64
+        #sed -i 's/CONFIG_ISO_IMAGES=y/#CONFIG_ISO_IMAGES is not set/' .config
+        sed -i 's/CONFIG_QCOW2_IMAGES=y/#CONFIG_QCOW2_IMAGES is not set/' .config
+        sed -i 's/CONFIG_VDI_IMAGES=y/#CONFIG_VDI_IMAGES is not set/' .config
+        sed -i 's/CONFIG_VMDK_IMAGES=y/#CONFIG_VDI_IMAGES is not set/' .config
+        sed -i 's/CONFIG_VHDX_IMAGES=y/#CONFIG_VHDX_IMAGES is not set/' .config
+        sed -i 's/CONFIG_TARGET_ROOTFS_PARTSIZE=300/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/' .config
+
+    - name: 添加非官方包
+      run: |
+        cd immortalwrt-imagebuilder-24.10.2-x86-64.Linux-x86_64
+        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/luci-app-lucky_2.2.2-r1_all.ipk
+        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
+        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/lucky_2.15.8_Openwrt_x86_64_wanji.ipk
+        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.9/luci-app-wechatpush_3.6.9_all.ipk
+        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.9/luci-i18n-wechatpush-zh-cn_25.089.39732.ed90c03_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.7.15-1/luci-24.10_luci-app-passwall_25.7.15-r1_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.7.15-1/luci-24.10_luci-i18n-passwall-zh-cn_25.196.30785.1241432_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.7.15-1/passwall_packages_ipk_x86_64.zip
+        unzip ./packages/passwall_packages_ipk_x86_64.zip -d ./packages/
+        wget -P ./packages https://github.com/sbwml/luci-app-mosdns/releases/download/v5.3.3-r5/openwrt-24.10-x86_64.tar.gz
+        tar --strip-components=1 -xzf ./packages/openwrt-24.10-x86_64.tar.gz -C ./packages/
+        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/luci-app-lucky_2.2.2-r1_all.ipk
+        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
+        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/lucky_2.15.8_Openwrt_x86_64_wanji.ipk
+        
+    - name: 编译
+      id: compile
+      run: |
+        cd immortalwrt-imagebuilder-24.10.2-x86-64.Linux-x86_64
+        make image PACKAGES="qemu-ga bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview	luci-app-mosdns luci-i18n-mosdns-zh-cn luci-app-lucky luci-i18n-lucky-zh-cn"
+        echo "FILE_DATE=$(date +"%Y%m%d-%H%M")" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 整理文件
+      id: organize
+      run: |
+        cd immortalwrt-imagebuilder-24.10.2-x86-64.Linux-x86_64/bin/targets/*/*
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 上传firmware文件夹
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: imagebuilder-24.10.2-x86-64-${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
+        
+    - name: 创建 release 标签
+      id: tag
+      run: |
+        echo "release_tag=imagebuilder24.10.2-x86-64-${{ env.FILE_DATE }}" >> $GITHUB_OUTPUT
+        touch release.txt
+        echo "TIME2=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 上传发布release
+      uses: softprops/action-gh-release@v1
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
+        
+    - name: 删除运行的工作流
+      uses: naoki66/delete-workflow-runs@main
+      with:
+        retain_days: 1
+        keep_minimum_runs: 3
+
+    - name: 删除旧RReleases
+      uses: dev-drprasad/delete-older-releases@v0.2.1
+      with:
+        keep_latest: 6
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+
+               
+    - name: Pushplus推送通知
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      run: curl http://www.pushplus.plus/send -X POST -H "Content-Type:application/json" -d '{"title":"imagebuilder编译immortalwrt-24.10.2-x86-64成功！","content":" 从${{ env.TIME1 }}开始到${{ env.TIME2 }}编译完成！","token":"${{ secrets.PUSHPLUS_TOKEN }}","webhook":"02","channel":"cp"}'

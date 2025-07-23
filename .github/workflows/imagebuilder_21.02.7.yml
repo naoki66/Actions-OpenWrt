@@ -1,0 +1,133 @@
+name: imagebuilder编译21.02.7
+on: 
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'  
+  schedule:
+  - cron: "50  3 * * 1"
+
+env:
+  TZ: Asia/Shanghai
+
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+
+    - name: 删除文件
+      run: |
+        docker rmi `docker images -q`
+        sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android
+        sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* adoptopenjdk* mysql* php* mongodb* dotnet* moby* snapd* || true
+        sudo -E apt-get -y autoremove --purge
+        sudo -E apt-get clean
+        sudo timedatectl set-timezone "$TZ"
+
+
+    - name: 显示系统情况
+      run: |
+        lscpu
+        free -h
+        df -Th
+        uname -a
+        echo "The timezone is $TZ"
+        echo "TIME1=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV
+
+    - name: 安装依赖文件
+      run: |
+        sudo -E apt update -y
+        sudo -E apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+        bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
+        git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev \
+        libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz \
+        mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools \
+        libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip \
+        vim wget xmlto xxd zlib1g-dev python3-setuptools
+
+    - name: 下载imagebuilder源码
+      run: |
+        wget https://downloads.immortalwrt.org/releases/21.02.7/targets/x86/64/immortalwrt-imagebuilder-21.02.7-x86-64.Linux-x86_64.tar.xz
+        tar -J -x -f immortalwrt-imagebuilder-21.02.7-x86-64.Linux-x86_64.tar.xz
+        
+
+    - name: 修改配置和编译文件
+      run: |
+        cd immortalwrt-imagebuilder-21.02.7-x86-64.Linux-x86_64
+        sed -i 's/CONFIG_ISO_IMAGES=y/#CONFIG_ISO_IMAGES is not set/' .config
+        #sed -i 's/CONFIG_QCOW2_IMAGES=y/#CONFIG_QCOW2_IMAGES is not set/' .config
+        sed -i 's/CONFIG_VDI_IMAGES=y/#CONFIG_VDI_IMAGES is not set/' .config
+        sed -i 's/CONFIG_VMDK_IMAGES=y/#CONFIG_VDI_IMAGES is not set/' .config
+        sed -i 's/CONFIG_VHDX_IMAGES=y/#CONFIG_VHDX_IMAGES is not set/' .config
+        #sed -i 's/CONFIG_TARGET_ROOTFS_PARTSIZE=300/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/' .config
+
+    - name: 添加非官方包
+      run: |
+        cd immortalwrt-imagebuilder-21.02.7-x86-64.Linux-x86_64
+        wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.9.2/ddns-go_6.9.2-r11_x86_64.ipk
+        wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.9.2/luci-app-ddns-go_1.5.3-r20250515_all.ipk
+ 
+        
+    - name: 编译
+      id: compile
+      run: |
+        cd immortalwrt-imagebuilder-21.02.7-x86-64.Linux-x86_64
+        make image PACKAGES="qemu-ga luci-i18n-smartdns-zh-cn luci-i18n-passwall-zh-cn luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-opkg-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn   luci-i18n-filetransfer-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn luci-i18n-accesscontrol-zh-cn luci-i18n-watchcat-zh-cn bind-host luci-i18n-ddns-go-zh-cn luci-i18n-wireguard-zh-cn"
+        echo "FILE_DATE=$(date +"%Y%m%d-%H%M")" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    
+    - name: 整理文件
+      id: organize
+      run: |
+        cd immortalwrt-imagebuilder-21.02.7-x86-64.Linux-x86_64/bin/targets/*/*
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 上传firmware文件夹
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: imagebuilder-21.02.7-x86-64-${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
+        
+    - name: 创建 release 标签
+      id: tag
+      run: |
+        echo "release_tag=imagebuilder21.02.7-x86-64-${{ env.FILE_DATE }}" >> $GITHUB_OUTPUT
+        touch release.txt
+        echo "TIME2=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 上传发布release
+      uses: softprops/action-gh-release@v1
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
+        
+    - name: 删除运行的工作流
+      uses: naoki66/delete-workflow-runs@main
+      with:
+        retain_days: 1
+        keep_minimum_runs: 3
+
+    - name: 删除旧RReleases
+      uses: dev-drprasad/delete-older-releases@v0.2.1
+      with:
+        keep_latest: 6
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+
+               
+    - name: Pushplus推送通知
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      run: curl http://www.pushplus.plus/send -X POST -H "Content-Type:application/json" -d '{"title":"imagebuilder编译immortalwrt21.02.7成功！","content":" 从${{ env.TIME1 }}开始到${{ env.TIME2 }}编译完成！","token":"${{ secrets.PUSHPLUS_TOKEN }}","webhook":"02","channel":"cp"}'
