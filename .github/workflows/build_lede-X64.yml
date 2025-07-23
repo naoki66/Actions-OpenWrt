@@ -8,7 +8,7 @@ on:
       - lede-luci-update
   workflow_dispatch:
   schedule:
-    - cron: '40 16 */3 * *'  # 每 3 天北京时间 00:40
+    - cron: '40 16 */7 * *'  # 每 7 天北京时间 00:40
 
 env:
   # ───── 源码与脚本 ─────
@@ -63,28 +63,30 @@ jobs:
                     /usr/local/lib/android /opt/ghc /usr/lib/jvm /usr/share/swift \
                     /usr/local/go /opt/hostedtoolcache/* /usr/share/az_*
         sudo docker system prune -af --volumes || true
-        sudo apt-get -qq update
-        sudo apt-get -qq install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison \
-          build-essential bzip2 ccache clang cmake cpio curl device-tree-compiler flex gawk \
-          gcc-multilib g++-multilib gettext genisoimage git gperf haveged help2man intltool \
-          libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev \
-          libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev \
-          libtool llvm lrzsz msmtp ninja-build p7zip p7zip-full patch pkgconf python3 \
-          python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion \
-          swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev uuid-dev libuuid1
-        sudo apt-get -qq autoremove --purge
-        sudo apt-get -qq clean
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install -y --no-install-recommends \
+            ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 \
+            ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
+            git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev \
+            libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev \
+            libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full \
+            patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons \
+            squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev zstd
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir 
+        sudo chown $USER:$GROUPS /workdir
 
     # 3️⃣ 克隆源码
     - name: 克隆源码
       working-directory: /workdir
       run: |
           df -hT $PWD
-          git clone --depth 1 -b $REPO_BRANCH $REPO_URL lede
+          git clone -b $REPO_BRANCH --single-branch --filter=blob:none $REPO_URL lede
           ln -sf $PWD/lede $GITHUB_WORKSPACE/lede
- 
- 
-    # 4️⃣ DL / Feeds / 工具链 缓存
+
+# 4️⃣  具链缓存
     - name: 缓存 ccache
       uses: actions/cache@v4
       with:
@@ -178,8 +180,7 @@ jobs:
       id: compile
       run: |
           cd lede
-          echo -e "$(nproc) thread compile"
-          make -j$(nproc) || make -j1 || make -j1 V=s
+          make -j2 || make -j1 || make -j1 V=s
 
     # 1️⃣1️⃣ 整理固件
     - name: 整理输出路径

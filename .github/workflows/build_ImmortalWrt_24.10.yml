@@ -8,7 +8,7 @@ on:
       - immortalwrt-luci-update
   workflow_dispatch:
   schedule:
-    - cron: '40 19 */3 * *'    # 每 3 天北京时间 03:40
+    - cron: '40 19 */7 * *'    # 每 7 天北京时间 03:40
 
 env:
   # ───── 源码与脚本 ─────
@@ -58,9 +58,12 @@ jobs:
     - name: 准备构建环境
       env: { DEBIAN_FRONTEND: noninteractive }
       run: |
-          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-          sudo -E apt-get -qq update
-          sudo -E apt-get -qq install -y --no-install-recommends \
+        sudo rm -rf /usr/share/{dotnet,man,doc,groff,info,lintian,linda,locale} \
+                    /usr/local/lib/android /opt/ghc /usr/lib/jvm /usr/share/swift \
+                    /usr/local/go /opt/hostedtoolcache/* /usr/share/az_*
+        sudo docker system prune -af --volumes || true
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install -y --no-install-recommends \
             ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 \
             ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
             git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev \
@@ -68,20 +71,20 @@ jobs:
             libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full \
             patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons \
             squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev zstd
-          sudo -E apt-get -qq autoremove --purge
-          sudo -E apt-get -qq clean
-          sudo timedatectl set-timezone "$TZ"
-          sudo mkdir -p /workdir && sudo chown $USER:$GROUPS /workdir
-          echo "TIME_START=$(date '+%Y年%m月%d日%H时%M分')" >> $GITHUB_ENV
-          echo "TIME_EPOCH_START=$(date +%s)" >> $GITHUB_ENV
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir 
+        sudo chown $USER:$GROUPS /workdir
+
 
 # 3️⃣ 克隆源码
     - name: 克隆 ImmortalWrt 源码
       working-directory: /workdir
       run: |
           df -hT $PWD
-          git clone --depth 1 -b $REPO_BRANCH $REPO_URL immortalwrt
-          ln -sf /workdir/immortalwrt $GITHUB_WORKSPACE/immortalwrt
+          git clone -b $REPO_BRANCH --single-branch --filter=blob:none $REPO_URL immortalwrt
+          ln -sf $PWD/immortalwrt $GITHUB_WORKSPACE/immortalwrt
 
 # 4️⃣  具链缓存
     - name: 缓存 ccache
@@ -175,8 +178,7 @@ jobs:
       id: compile
       run: |
           cd immortalwrt
-          echo -e "$(nproc) thread compile"
-          make -j$(nproc) || make -j1 || make -j1 V=s
+          make -j2 || make -j1 || make -j1 V=s
 
     # 1️⃣1️⃣ 整理固件
     - name: 整理输出路径
@@ -210,7 +212,7 @@ jobs:
       if: env.UPLOAD_FIRMWARE == 'true'
       uses: actions/upload-artifact@v4
       with:
-          name: immortalwrt-24.10-${{ github.run_number }}
+          name: immortalwrt24.10-${{ github.run_number }}
           path: ${{ env.FIRMWARE_DIR }}
 
    # 1️⃣4️⃣ 创建 GitHub 发布版本
@@ -220,8 +222,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}      
       with:
-          tag_name: immortalwrt-24.10-${{ github.run_number }}
-          name: immortalwrt-24.10-X64-${{ env.RELEASE_TAG }}
+          tag_name: immortalwrt24.10-${{ env.RELEASE_TAG }}
+          name: immortalwrt24.10-X64-${{ env.RELEASE_TAG }}
           body: |
             📦 **编译时间段**  
             ⏰ 从 **${{ env.TIME0 }}** 到 **${{ env.TIME1 }}**  
