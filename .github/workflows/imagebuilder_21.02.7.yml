@@ -122,7 +122,7 @@ jobs:
     - name: 删除旧RReleases
       uses: dev-drprasad/delete-older-releases@v0.2.1
       with:
-        keep_latest: 6
+        keep_latest: 15
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}

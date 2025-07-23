@@ -2,6 +2,10 @@ name: "构建LEDE-X64固件"
 
 on:
   repository_dispatch:
+      types: 
+      - lede-update
+      - lede-packages-update
+      - lede-luci-update
   workflow_dispatch:
   schedule:
     - cron: '40 16 */3 * *'  # 每 3 天北京时间 00:40

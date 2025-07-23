@@ -6,10 +6,6 @@
 # 修改默认IP
 sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
 
-# 恢复首页显示
-#sed -i 's/^.*mwan.htm.*/#&/' package/lean/default-settings/files/zzz-default-settings
-#sed -i 's/^.*upnp.htm.*/#&/' package/lean/default-settings/files/zzz-default-settings
-#sed -i 's/^.*ddns.htm.*/#&/' package/lean/default-settings/files/zzz-default-settings
 
 
 # 日期
@@ -19,8 +15,8 @@ sed -i 's/os.date(/&"%Y-%m-%d %H:%M:%S"/' package/lean/autocore/files/x86/index.
 sed -i 's@.*CYXluq4wUazHjmCDBCqXF*@#&@g' package/lean/default-settings/files/zzz-default-settings
 
 #干掉跑分程序
-#sed -i 's, <%=luci.sys.exec("cat /etc/bench.log") or " "%><,<,g'  package/lean/autocore/files/x86/index.htm
-#rm -rf ./feeds/packages/utils/coremark
+sed -i 's, <%=luci.sys.exec("cat /etc/bench.log") or " "%><,<,g'  package/lean/autocore/files/x86/index.htm
+rm -rf ./feeds/packages/utils/coremark
 
 # 删除WAN6接口配置
 #sed -i "/uci commit fstab/a\uci delete network.wan6" package/lean/default-settings/files/zzz-default-settings

@@ -2,6 +2,10 @@ name: "构建immortalwrt24.10-X64固件"
 
 on:
   repository_dispatch:
+    types: 
+      - immortalwrt-update
+      - immortalwrt-packages-update
+      - immortalwrt-luci-update
   workflow_dispatch:
   schedule:
     - cron: '40 19 */3 * *'    # 每 3 天北京时间 03:40
