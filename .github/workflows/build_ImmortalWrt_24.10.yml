@@ -65,10 +65,10 @@ jobs:
         sudo -E apt-get -qq update
         sudo -E apt-get -qq install -y --no-install-recommends \
             ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 \
-            ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
+            ccache clang cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
             git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev \
             libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev \
-            libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full \
+            libreadline-dev libssl-dev libtool llvm lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full \
             patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons \
             squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev zstd
         sudo -E apt-get -qq autoremove --purge
@@ -153,13 +153,16 @@ jobs:
     # 8️⃣ 通过API生成上游一周更新日志
     - name: 通过API生成上游一周更新日志
       run: |
-        echo "CHANGELOG_CONTENT<<EOF" >> changelog_env.txt
+        echo "CHANGELOG_CONTENT<<EOF" > changelog_env.txt
         echo "##🔧 [immortalwrt 主仓库](https://github.com/immortalwrt/immortalwrt)" >> changelog_env.txt
-        curl -s "https://api.github.com/repos/immortalwrt/immortalwrt/commits?since=$(date -d '-7 days' --iso-8601=s)" | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt
+        curl -s "https://api.github.com/repos/immortalwrt/immortalwrt/commits?since=$(date -d '-7 days' --iso-8601=s)" \
+          | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
         echo "##📦 [immortalwrt packages](https://github.com/immortalwrt/packages)" >> changelog_env.txt
-        curl -s "https://api.github.com/repos/immortalwrt/packages/commits?since=$(date -d '-7 days' --iso-8601=s)" | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt
+        curl -s "https://api.github.com/repos/immortalwrt/packages/commits?since=$(date -d '-7 days' --iso-8601=s)" \
+          | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
         echo "##🖥️ [immortalwrt luci](https://github.com/immortalwrt/luci)" >> changelog_env.txt
-        curl -s "https://api.github.com/repos/immortalwrt/luci/commits?since=$(date -d '-7 days' --iso-8601=s)" | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt
+        curl -s "https://api.github.com/repos/immortalwrt/luci/commits?since=$(date -d '-7 days' --iso-8601=s)" \
+          | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
         echo "EOF" >> changelog_env.txt
         cat changelog_env.txt >> $GITHUB_ENV
 
