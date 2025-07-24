@@ -94,6 +94,9 @@ jobs:
       run: |
         echo "release_tag=imagebuilder21.02.7-x86-64-${{ env.FILE_DATE }}" >> $GITHUB_OUTPUT
         touch release.txt
+        echo "## ImmortalWrt 编译信息" >> release.txt
+        echo "imagebuilder21.02.7-x64-${{ env.FILE_DATE }}" >> release.txt
+        echo "编译完成时间：$(date "+%Y年%m月%d日%H时%M分")" >> release.txt        
         echo "TIME2=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 

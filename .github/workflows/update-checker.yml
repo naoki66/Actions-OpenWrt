@@ -1,5 +1,4 @@
-name: 多仓库更新检查
-
+name: 上游更新检查
 on:
   workflow_dispatch:
   schedule:
