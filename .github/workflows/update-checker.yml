@@ -3,7 +3,7 @@ name: 多仓库更新检查
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *'  # 每6小时检查一次
+    - cron: '0 17 * * *'  # 中国时间每天凌晨1:00（UTC 17:00）
 
 jobs:
   check-repos:

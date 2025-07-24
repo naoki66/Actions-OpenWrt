@@ -1,12 +1,6 @@
 name: imagebuilder编译21.02.7
 on: 
-  repository_dispatch:
   workflow_dispatch:
-    inputs:
-      ssh:
-        description: 'SSH connection to Actions'
-        required: false
-        default: 'false'  
   schedule:
   - cron: "50  3 * * 1"
 

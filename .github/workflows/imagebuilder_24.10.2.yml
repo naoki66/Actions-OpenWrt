@@ -1,14 +1,8 @@
 name: imagebuilder编译24.10.2
 on: 
-  repository_dispatch:
   workflow_dispatch:
-    inputs:
-      ssh:
-        description: 'SSH connection to Actions'
-        required: false
-        default: 'false'  
   schedule:
-  - cron: "20  3 * * 1"
+  - cron: "20  4 * * 1"
 
 env:
   TZ: Asia/Shanghai
