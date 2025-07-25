@@ -9,9 +9,6 @@ jobs:
   check-and-dispatch:
     runs-on: ubuntu-latest
     steps:
-      - name: 🧾 检出本地仓库代码
-        uses: actions/checkout@v3
-
       - name: 🔍 获取 ImmortalWrt 最新标签
         id: get_tag
         run: |
@@ -21,7 +18,7 @@ jobs:
       - name: 📄 读取上次保存的标签
         id: read_tag
         run: |
-          CACHE_DIR="$HOME/.repo_cache/immortalwrt"
+          CACHE_DIR="$HOME/.repo_cache"
           mkdir -p $CACHE_DIR
           CACHE_FILE="$CACHE_DIR/last_tag"
           if [ -f "$CACHE_FILE" ]; then
@@ -35,17 +32,12 @@ jobs:
         id: compare
         run: |
           if [ "${{ steps.get_tag.outputs.latest_tag }}" != "${{ steps.read_tag.outputs.last_tag }}" ]; then
-            echo "has_update=true" >> "$GITHUB_OUTPUT"
-            CACHE_DIR="$HOME/.repo_cache/immortalwrt"
-            mkdir -p $CACHE_DIR
-            CACHE_FILE="$CACHE_DIR/last_tag"
-            echo "${{ steps.get_tag.outputs.latest_tag }}" > "$CACHE_FILE"
+            echo "trigger=true" >> "$GITHUB_OUTPUT"
           else
-            echo "has_update=false" >> "$GITHUB_OUTPUT"
-          fi
+            echo "trigger=false" >> "$GITHUB_OUTPUT"
 
       - name: 🚀 触发仓库执行编译
-        if: steps.compare.outputs.has_update == 'true'
+        if: steps.compare.outputs.trigger == 'true'
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
@@ -58,13 +50,9 @@ jobs:
             }
 
       - name: 💾 保存本次最新标签
-        if: steps.compare.outputs.has_update == 'true'
+        if: steps.compare.outputs.trigger == 'true'
         run: |
-          CACHE_DIR="$HOME/.repo_cache/immortalwrt"
+          CACHE_DIR="$HOME/.repo_cache"
+          mkdir -p $CACHE_DIR
           CACHE_FILE="$CACHE_DIR/last_tag"
-          cp "$CACHE_FILE" last_tag.txt
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add last_tag.txt
-          git commit -m "更新标签为 ${{ steps.get_tag.outputs.latest_tag }}"
-          git push origin main
+          echo "${{ steps.get_tag.outputs.latest_tag }}" > "$CACHE_FILE"
