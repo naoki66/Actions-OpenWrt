@@ -53,7 +53,8 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ steps.vars.outputs.cache_path }}
-        key: ${{ steps.vars.outputs.cache_key }}
+        key: ${{ steps.vars.outputs.cache_key }}-${{ github.run_id }}
+        restore-keys: ${{ steps.vars.outputs.cache_key }}-
 
     - name: 检查 ${{ matrix.repo_config.id }} 更新
       id: check-update
@@ -63,7 +64,7 @@ jobs:
         cd source-repo
         LATEST_HASH=$(git rev-parse HEAD)
         echo "最新提交: $LATEST_HASH"
-        echo "LATEST_HASH=$LATEST_HASH" >> $GITHUB_ENV  # 供下方 client-payload 使用
+        echo "LATEST_HASH=$LATEST_HASH" >> $GITHUB_ENV  # 提供给触发器使用
 
         # 定位缓存文件
         CACHE_FILE="${{ steps.vars.outputs.cache_path }}/last_commit"
@@ -95,3 +96,10 @@ jobs:
             "repo_url": "${{ matrix.repo_config.url }}",
             "commit_hash": "${{ env.LATEST_HASH }}"
           }
+          
+    - name: 💾 保存最新 commit 哈希到缓存
+        if: steps.check-update.outputs.has_update == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ steps.vars.outputs.cache_path }}
+          key: ${{ steps.vars.outputs.cache_key }}-${{ github.run_id }}
