@@ -1,6 +1,9 @@
 name: imagebuilder编译snapshots
 on: 
   workflow_dispatch:
+  repository_dispatch:
+    types:
+      - Tag_updated
   schedule:
   - cron: "40  4 * * 1"
 
