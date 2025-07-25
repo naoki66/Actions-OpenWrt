@@ -1,8 +1,8 @@
 name: 检查上游标签更新并触发编译仓库
 
 on:
-    workflow_dispatch:
-    schedule:
+  workflow_dispatch:
+  schedule:
     - cron: '0 17 */3 * *'    # 每3天的北京时间01:00运行
 
 jobs:
@@ -21,8 +21,11 @@ jobs:
       - name: 📄 读取上次保存的标签
         id: read_tag
         run: |
-          if [ -f last_tag.txt ]; then
-            last_tag=$(cat last_tag.txt)
+          CACHE_DIR="$HOME/.repo_cache/immortalwrt"
+          mkdir -p $CACHE_DIR
+          CACHE_FILE="$CACHE_DIR/last_tag"
+          if [ -f "$CACHE_FILE" ]; then
+            last_tag=$(cat "$CACHE_FILE")
           else
             last_tag=""
           fi
@@ -32,12 +35,17 @@ jobs:
         id: compare
         run: |
           if [ "${{ steps.get_tag.outputs.latest_tag }}" != "${{ steps.read_tag.outputs.last_tag }}" ]; then
-            echo "trigger=true" >> "$GITHUB_OUTPUT"
+            echo "has_update=true" >> "$GITHUB_OUTPUT"
+            CACHE_DIR="$HOME/.repo_cache/immortalwrt"
+            mkdir -p $CACHE_DIR
+            CACHE_FILE="$CACHE_DIR/last_tag"
+            echo "${{ steps.get_tag.outputs.latest_tag }}" > "$CACHE_FILE"
           else
-            echo "trigger=false" >> "$GITHUB_OUTPUT"
+            echo "has_update=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: 🚀 触发仓库执行编译
-        if: steps.compare.outputs.trigger == 'true'
+        if: steps.compare.outputs.has_update == 'true'
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
@@ -50,9 +58,11 @@ jobs:
             }
 
       - name: 💾 保存本次最新标签
-        if: steps.compare.outputs.trigger == 'true'
+        if: steps.compare.outputs.has_update == 'true'
         run: |
-          echo "${{ steps.get_tag.outputs.latest_tag }}" > last_tag.txt
+          CACHE_DIR="$HOME/.repo_cache/immortalwrt"
+          CACHE_FILE="$CACHE_DIR/last_tag"
+          cp "$CACHE_FILE" last_tag.txt
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add last_tag.txt
