@@ -2,7 +2,7 @@ name: imagebuilder编译21.02.7
 on: 
   workflow_dispatch:
   repository_dispatch:
-  types:
+    types:
       - Tag_updated
   schedule:
   - cron: "50  3 * * 1"
