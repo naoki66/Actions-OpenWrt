@@ -125,10 +125,11 @@ jobs:
         files: ${{ env.FIRMWARE }}/*
         
     - name: 删除运行的工作流
-      uses: naoki66/delete-workflow-runs@main
+      uses: Mattraks/delete-workflow-runs@v2
       with:
-        retain_days: 1
-        keep_minimum_runs: 3
+        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        retain_days: 15
+        keep_minimum_runs: 10
 
     - name: 删除旧RReleases
       uses: ophub/delete-releases-workflows@main

@@ -237,13 +237,11 @@ jobs:
 
     # 1️⃣5️⃣ 清理旧 Workflow 记录
     - name: 清理旧 Workflow 记录
-      uses: Mattraks/delete-workflow-runs@v2.0.6
-      env:
-          GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+      uses: Mattraks/delete-workflow-runs@v2
       with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          retain_days: 2
-          keep_minimum_runs: 3
+        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        retain_days: 15
+        keep_minimum_runs: 10
 
    # 1️⃣6️⃣ 清理旧版本
     - name: 清理旧 Release
