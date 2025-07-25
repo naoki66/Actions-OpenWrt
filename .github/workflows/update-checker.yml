@@ -96,10 +96,10 @@ jobs:
             "repo_url": "${{ matrix.repo_config.url }}",
             "commit_hash": "${{ env.LATEST_HASH }}"
           }
-          
+
     - name: 💾 保存最新 commit 哈希到缓存
-        if: steps.check-update.outputs.has_update == 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ steps.vars.outputs.cache_path }}
-          key: ${{ steps.vars.outputs.cache_key }}-${{ github.run_id }}
+      if: steps.check-update.outputs.has_update == 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ steps.vars.outputs.cache_path }}
+        key: ${{ steps.vars.outputs.cache_key }}-${{ github.run_id }}
