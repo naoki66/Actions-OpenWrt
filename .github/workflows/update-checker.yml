@@ -1,4 +1,5 @@
 name: 检查上游commits更新并触发编译仓库
+
 on:
   workflow_dispatch:
   schedule:
@@ -9,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # 在此定义所有要监控的仓库配置
         repo_config:
           - id: immortalwrt
             url: https://github.com/immortalwrt/immortalwrt
@@ -25,12 +25,12 @@ jobs:
             url: https://github.com/immortalwrt/luci
             branch: master
             event: immortalwrt-luci-update            
-            
+
           - id: lede
             url: https://github.com/coolsnowwolf/lede
             branch: master
             event: lede-update
-            
+
           - id: lede-luci
             url: https://github.com/coolsnowwolf/luci
             branch: master
@@ -41,47 +41,57 @@ jobs:
             branch: master
             event: lede-packages-update
 
-
     steps:
+    - name: 设置缓存目录路径
+      id: vars
+      run: |
+        echo "cache_path=.cache/${{ matrix.repo_config.id }}" >> $GITHUB_OUTPUT
+        echo "cache_key=commit-${{ matrix.repo_config.id }}" >> $GITHUB_OUTPUT
+
+    - name: 恢复上次缓存的提交哈希
+      id: restore-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.vars.outputs.cache_path }}
+        key: ${{ steps.vars.outputs.cache_key }}
+
     - name: 检查 ${{ matrix.repo_config.id }} 更新
       id: check-update
       run: |
-        # 克隆目标仓库
+        # 克隆目标仓库最新 commit
         git clone --depth 1 ${{ matrix.repo_config.url }} -b ${{ matrix.repo_config.branch }} source-repo
-        
-        # 获取最新Commit Hash
         cd source-repo
         LATEST_HASH=$(git rev-parse HEAD)
         echo "最新提交: $LATEST_HASH"
-        
-        # 检查缓存目录
-        CACHE_DIR="$HOME/.repo_cache/${{ matrix.repo_config.id }}"
-        mkdir -p $CACHE_DIR
-        CACHE_FILE="$CACHE_DIR/last_commit"
-        
-        # 检查是否有新提交
+        echo "LATEST_HASH=$LATEST_HASH" >> $GITHUB_ENV  # 供下方 client-payload 使用
+
+        # 定位缓存文件
+        CACHE_FILE="${{ steps.vars.outputs.cache_path }}/last_commit"
+        mkdir -p "$(dirname "$CACHE_FILE")"
+
         if [[ -f "$CACHE_FILE" ]]; then
-          CACHED_HASH=$(cat $CACHE_FILE)
-          if [[ "$CACHED_HASH" == "$LATEST_HASH" ]]; then
-            echo "::set-output name=has_update::false"
+          OLD_HASH=$(cat "$CACHE_FILE")
+          if [[ "$OLD_HASH" == "$LATEST_HASH" ]]; then
+            echo "has_update=false" >> "$GITHUB_OUTPUT"
             echo "无新提交"
             exit 0
           fi
         fi
-        
-        # 检测到更新
-        echo "$LATEST_HASH" > $CACHE_FILE
-        echo "::set-output name=has_update::true"
-        echo "检测到新提交!"
-        
+
+        # 有更新
+        echo "$LATEST_HASH" > "$CACHE_FILE"
+        echo "has_update=true" >> "$GITHUB_OUTPUT"
+        echo "检测到新提交！"
+
     - name: 触发构建
       if: steps.check-update.outputs.has_update == 'true'
       uses: peter-evans/repository-dispatch@v2
       with:
         token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
         event-type: ${{ matrix.repo_config.event }}
-        client-payload: '{
-          "repo_id": "${{ matrix.repo_config.id }}",
-          "repo_url": "${{ matrix.repo_config.url }}",
-          "commit_hash": "${{ steps.check-update.outputs.LATEST_HASH }}"
-        }'
+        client-payload: >-
+          {
+            "repo_id": "${{ matrix.repo_config.id }}",
+            "repo_url": "${{ matrix.repo_config.url }}",
+            "commit_hash": "${{ env.LATEST_HASH }}"
+          }

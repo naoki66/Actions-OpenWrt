@@ -3,38 +3,52 @@ name: 检查上游标签更新并触发编译仓库
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 17 */3 * *'    # 每3天的北京时间01:00运行
+    - cron: '0 17 */3 * *'  # 每3天的北京时间01:00运行
 
 jobs:
   check-and-dispatch:
     runs-on: ubuntu-latest
+
     steps:
+      - name: 💡 设置缓存 key 和路径
+        id: vars
+        run: |
+          echo "cache_path=.tag_cache" >> "$GITHUB_OUTPUT"
+          echo "cache_key=tag-cache" >> "$GITHUB_OUTPUT"
+
+      - name: 💾 恢复缓存的标签
+        id: cache-restore
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.vars.outputs.cache_path }}
+          key: ${{ steps.vars.outputs.cache_key }}
+
+      - name: 📄 读取上次保存的标签
+        id: read_tag
+        run: |
+          file="${{ steps.vars.outputs.cache_path }}/last_tag"
+          if [ -f "$file" ]; then
+            last_tag=$(cat "$file")
+          else
+            last_tag=""
+          fi
+          echo "last_tag=$last_tag" >> "$GITHUB_OUTPUT"
+
       - name: 🔍 获取 ImmortalWrt 最新标签
         id: get_tag
         run: |
           latest_tag=$(curl -s https://api.github.com/repos/immortalwrt/immortalwrt/tags | jq -r '.[0].name')
           echo "latest_tag=$latest_tag" >> "$GITHUB_OUTPUT"
 
-      - name: 📄 读取上次保存的标签
-        id: read_tag
-        run: |
-          CACHE_DIR="$HOME/.repo_cache"
-          mkdir -p $CACHE_DIR
-          CACHE_FILE="$CACHE_DIR/last_tag"
-          if [ -f "$CACHE_FILE" ]; then
-            last_tag=$(cat "$CACHE_FILE")
-          else
-            last_tag=""
-          fi
-          echo "last_tag=$last_tag" >> "$GITHUB_OUTPUT"
-
       - name: 🔁 判断标签是否更新
         id: compare
         run: |
-          if [ "${{ steps.get_tag.outputs.latest_tag }}" != "${{ steps.read_tag.outputs.last_tag }}" ]; then
+          if [ "${{ steps.get_tag.outputs.latest_tag }}" != "" ] && \
+             [ "${{ steps.get_tag.outputs.latest_tag }}" != "${{ steps.read_tag.outputs.last_tag }}" ]; then
             echo "trigger=true" >> "$GITHUB_OUTPUT"
           else
             echo "trigger=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: 🚀 触发仓库执行编译
         if: steps.compare.outputs.trigger == 'true'
@@ -49,10 +63,8 @@ jobs:
               "timestamp": "${{ github.run_id }}"
             }
 
-      - name: 💾 保存本次最新标签
+      - name: 💾 保存最新标签到缓存目录
         if: steps.compare.outputs.trigger == 'true'
         run: |
-          CACHE_DIR="$HOME/.repo_cache"
-          mkdir -p $CACHE_DIR
-          CACHE_FILE="$CACHE_DIR/last_tag"
-          echo "${{ steps.get_tag.outputs.latest_tag }}" > "$CACHE_FILE"
+          mkdir -p ${{ steps.vars.outputs.cache_path }}
+          echo "${{ steps.get_tag.outputs.latest_tag }}" > "${{ steps.vars.outputs.cache_path }}/last_tag"
