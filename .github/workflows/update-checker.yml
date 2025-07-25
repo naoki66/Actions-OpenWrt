@@ -1,4 +1,4 @@
-name: 上游仓库更新检查
+name: 检查上游commits更新并触发编译仓库
 on:
   workflow_dispatch:
   schedule:
