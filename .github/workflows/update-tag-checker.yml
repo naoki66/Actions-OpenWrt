@@ -21,7 +21,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.vars.outputs.cache_path }}
-          key: ${{ steps.vars.outputs.cache_key }}
+          key: ${{ steps.vars.outputs.cache_key }}-${{ github.run_id }}
+          restore-keys: ${{ steps.vars.outputs.cache_key }}-
 
       - name: 📄 读取上次保存的标签
         id: read_tag
@@ -65,6 +66,7 @@ jobs:
 
       - name: 💾 保存最新标签到缓存目录
         if: steps.compare.outputs.trigger == 'true'
-        run: |
-          mkdir -p ${{ steps.vars.outputs.cache_path }}
-          echo "${{ steps.get_tag.outputs.latest_tag }}" > "${{ steps.vars.outputs.cache_path }}/last_tag"
+        uses: actions/cache/save@v4
+        with:
+           path: ${{ steps.vars.outputs.cache_path }}
+           key: ${{ steps.vars.outputs.cache_key }}
