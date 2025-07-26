@@ -115,9 +115,10 @@ jobs:
       run: |
         echo "release_tag=imagebuilder24.10.2-x64-${{ env.FILE_DATE }}" >> $GITHUB_OUTPUT
         touch release.txt
-        echo "## ImmortalWrt 编译信息" >> release.txt
-        echo "imagebuilder24.10.2-x64" >> release.txt
-        echo "编译完成时间：$(date "+%Y年%m月%d日%H时%M分")" >> release.txt
+        echo "🟧ImmortalWrt imagebuilder编译信息" >> release.txt
+        echo "⏏️imagebuilder24.10.2-x64" >> release.txt
+        echo "🔗https://downloads.immortalwrt.org/releases/24.10.2/targets/x86/64/" >> release.txt
+        echo "⏰编译完成时间：$(date "+%Y年%m月%d日%H时%M分")" >> release.txt
         echo "TIME2=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV        
         echo "status=success" >> $GITHUB_OUTPUT
 
