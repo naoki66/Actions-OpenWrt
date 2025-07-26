@@ -57,12 +57,18 @@ jobs:
     - name: 修改配置和编译文件
       run: |
         cd immortalwrt-imagebuilder-24.10.2-x86-64.Linux-x86_64
-        #sed -i 's/CONFIG_ISO_IMAGES=y/#CONFIG_ISO_IMAGES is not set/' .config
-        #sed -i 's/CONFIG_QCOW2_IMAGES=y/#CONFIG_QCOW2_IMAGES is not set/' .config
-        #sed -i 's/CONFIG_VDI_IMAGES=y/#CONFIG_VDI_IMAGES is not set/' .config
-        #sed -i 's/CONFIG_VMDK_IMAGES=y/#CONFIG_VDI_IMAGES is not set/' .config
-        sed -i 's/CONFIG_VHDX_IMAGES=y/#CONFIG_VHDX_IMAGES is not set/' .config
-        sed -i 's/CONFIG_TARGET_ROOTFS_PARTSIZE=300/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/' .config
+        sed -i 's/CONFIG_TARGET_ROOTFS_EXT4FS=y/#CONFIG_TARGET_ROOTFS_EXT4FS is not set/' .config
+        sed -i 's/CONFIG_TARGET_EXT4_RESERVED_PCT=0/#CONFIG_TARGET_EXT4_RESERVED_PCT=0 is not set/' .config
+        sed -i 's/CONFIG_TARGET_EXT4_BLOCKSIZE_4K=y/#CONFIG_TARGET_EXT4_BLOCKSIZE_4K is not set/' .config
+        sed -i 's/CONFIG_TARGET_EXT4_BLOCKSIZE=4096/#CONFIG_TARGET_EXT4_BLOCKSIZE is not set/' .config
+        sed -i 's/CONFIG_TARGET_EXT4_JOURNAL=y/#CONFIG_TARGET_EXT4_JOURNAL is not set/' .config
+        sed -i 's/CONFIG_ISO_IMAGES=y/#CONFIG_ISO_IMAGES is not set/' .config
+        sed -i 's/CONFIG_QCOW2_IMAGES=y/#CONFIG_QCOW2_IMAGES is not set/' .config
+        sed -i 's/CONFIG_VDI_IMAGES=y/#CONFIG_VDI_IMAGES is not set/' .config
+        sed -i 's/CONFIG_VMDK_IMAGES=y/#CONFIG_VDI_IMAGES is not set/' .config
+        sed -i 's/CONFIG_TARGET_ROOTFS_PARTSIZE=300/CONFIG_TARGET_ROOTFS_PARTSIZE=512/' .config
+        sed -i 's/CONFIG_TARGET_PREINIT_IP="192.168.1.1"/CONFIG_TARGET_PREINIT_IP="192.168.10.1"/' .config
+        sed -i 's/CONFIG_TARGET_PREINIT_BROADCAST="192.168.1.255"/CONFIG_TARGET_PREINIT_BROADCAST="192.168.10.255"/' .config
 
     - name: 添加非官方包
       run: |
