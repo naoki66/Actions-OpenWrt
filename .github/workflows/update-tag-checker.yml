@@ -1,4 +1,4 @@
-name: 检查上游标签更新并触发编译仓库
+name: cc
 
 on:
   workflow_dispatch:
@@ -21,8 +21,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.vars.outputs.cache_path }}
-          key: ${{ steps.vars.outputs.cache_key }}-${{ github.run_id }}
-          restore-keys: ${{ steps.vars.outputs.cache_key }}-
+          key: ${{ steps.vars.outputs.cache_key }}
+          restore-keys: ${{ steps.vars.outputs.cache_key }}
 
       - name: 📄 读取上次保存的标签
         id: read_tag
@@ -30,8 +30,10 @@ jobs:
           file="${{ steps.vars.outputs.cache_path }}/last_tag"
           if [ -f "$file" ]; then
             last_tag=$(cat "$file")
+            echo "上次保存的标签: $last_tag"
           else
             last_tag=""
+            echo "未找到缓存的标签，这可能是首次运行"
           fi
           echo "last_tag=$last_tag" >> "$GITHUB_OUTPUT"
 
@@ -39,6 +41,11 @@ jobs:
         id: get_tag
         run: |
           latest_tag=$(curl -s https://api.github.com/repos/immortalwrt/immortalwrt/tags | jq -r '.[0].name')
+          if [ -z "$latest_tag" ]; then
+            echo "获取最新标签失败，可能是 GitHub API 限制或仓库不存在"
+            exit 1
+          fi
+          echo "最新标签: $latest_tag"
           echo "latest_tag=$latest_tag" >> "$GITHUB_OUTPUT"
 
       - name: 🔁 判断标签是否更新
@@ -46,8 +53,10 @@ jobs:
         run: |
           if [ "${{ steps.get_tag.outputs.latest_tag }}" != "" ] && \
              [ "${{ steps.get_tag.outputs.latest_tag }}" != "${{ steps.read_tag.outputs.last_tag }}" ]; then
+            echo "检测到标签更新: ${{ steps.read_tag.outputs.last_tag }} → ${{ steps.get_tag.outputs.latest_tag }}"
             echo "trigger=true" >> "$GITHUB_OUTPUT"
           else
+            echo "标签未更新，当前标签: ${{ steps.get_tag.outputs.latest_tag }}"
             echo "trigger=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -65,8 +74,15 @@ jobs:
             }
 
       - name: 💾 保存最新标签到缓存目录
-        if: steps.compare.outputs.trigger == 'true'
+        if: steps.compare.outputs.trigger == 'true'  # 只在标签更新时保存
+        run: |
+          mkdir -p ${{ steps.vars.outputs.cache_path }}
+          echo "${{ steps.get_tag.outputs.latest_tag }}" > ${{ steps.vars.outputs.cache_path }}/last_tag
+          echo "已保存最新标签: ${{ steps.get_tag.outputs.latest_tag }}"
+          
+      - name: 💾 缓存最新标签文件
+        if: steps.compare.outputs.trigger == 'true'  # 只在标签更新时缓存
         uses: actions/cache/save@v4
         with:
-           path: ${{ steps.vars.outputs.cache_path }}
-           key: ${{ steps.vars.outputs.cache_key }}
+          path: ${{ steps.vars.outputs.cache_path }}
+          key: ${{ steps.vars.outputs.cache_key }}
