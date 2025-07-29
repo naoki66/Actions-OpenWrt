@@ -3,9 +3,7 @@ name: "构建LEDE-X64固件"
 on:
   repository_dispatch:
       types: 
-      - lede-update
-      - lede-packages-update
-      - lede-luci-update
+      - lede-group-update
   workflow_dispatch:
   schedule:
     - cron: '40 16 */7 * *'  # 每 7 天北京时间 00:40
@@ -156,13 +154,13 @@ jobs:
     - name: 通过API生成上游一周更新日志
       run: |
         echo "CHANGELOG_CONTENT<<EOF" > changelog_env.txt
-        echo "##🔧 [coolsnowwolf lede主仓库](https://github.com/coolsnowwolf/lede)" >> changelog_env.txt
+        echo "-  🔧 [coolsnowwolf lede主仓库](https://github.com/coolsnowwolf/lede)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/coolsnowwolf/lede/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
-        echo "##📦 [coolsnowwolf packages](https://github.com/coolsnowwolf/packages)" >> changelog_env.txt
+        echo "-  📦 [coolsnowwolf packages](https://github.com/coolsnowwolf/packages)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/coolsnowwolf/packages/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
-        echo "##🖥️ [coolsnowwolf luci](https://github.com/coolsnowwolf/luci)" >> changelog_env.txt
+        echo "-  🖥️ [coolsnowwolf luci](https://github.com/coolsnowwolf/luci)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/coolsnowwolf/luci/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
         echo "EOF" >> changelog_env.txt

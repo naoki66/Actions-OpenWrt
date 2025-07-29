@@ -3,9 +3,7 @@ name: "构建immortalwrt24.10-X64固件"
 on:
   repository_dispatch:
     types: 
-      - immortalwrt-update
-      - immortalwrt-packages-update
-      - immortalwrt-luci-update
+      - immortalwrt-group-update
   workflow_dispatch:
   schedule:
     - cron: '40 19 */7 * *'    # 每 7 天北京时间 03:40
@@ -154,13 +152,13 @@ jobs:
     - name: 通过API生成上游一周更新日志
       run: |
         echo "CHANGELOG_CONTENT<<EOF" > changelog_env.txt
-        echo "##🔧 [immortalwrt 主仓库](https://github.com/immortalwrt/immortalwrt)" >> changelog_env.txt
+        echo "-  🔧 [immortalwrt 主仓库](https://github.com/immortalwrt/immortalwrt)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/immortalwrt/immortalwrt/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
-        echo "##📦 [immortalwrt packages](https://github.com/immortalwrt/packages)" >> changelog_env.txt
+        echo "-  📦 [immortalwrt packages](https://github.com/immortalwrt/packages)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/immortalwrt/packages/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
-        echo "##🖥️ [immortalwrt luci](https://github.com/immortalwrt/luci)" >> changelog_env.txt
+        echo "-  🖥️ [immortalwrt luci](https://github.com/immortalwrt/luci)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/immortalwrt/luci/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
         echo "EOF" >> changelog_env.txt

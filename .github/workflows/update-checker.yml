@@ -10,43 +10,42 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        repo_config:
-          - id: immortalwrt
-            url: https://github.com/immortalwrt/immortalwrt
-            branch: master
-            event: immortalwrt-update
-
-          - id: immortalwrt-packages
-            url: https://github.com/immortalwrt/packages
-            branch: master
-            event: immortalwrt-packages-update
-
-          - id: luci-packages
-            url: https://github.com/immortalwrt/luci
-            branch: master
-            event: immortalwrt-luci-update            
-
-          - id: lede
-            url: https://github.com/coolsnowwolf/lede
-            branch: master
-            event: lede-update
-
-          - id: lede-luci
-            url: https://github.com/coolsnowwolf/luci
-            branch: master
-            event: lede-luci-update
-
-          - id: lede-packages
-            url: https://github.com/coolsnowwolf/packages
-            branch: master
-            event: lede-packages-update
+        repo_group:
+          - id: immortalwrt-group
+            repos:
+              - id: immortalwrt
+                url: https://github.com/immortalwrt/immortalwrt
+                branch: master
+                event: immortalwrt-update
+              - id: immortalwrt-packages
+                url: https://github.com/immortalwrt/packages
+                branch: master
+                event: immortalwrt-packages-update
+              - id: luci-packages
+                url: https://github.com/immortalwrt/luci
+                branch: master
+                event: immortalwrt-luci-update
+          - id: lede-group
+            repos:
+              - id: lede
+                url: https://github.com/coolsnowwolf/lede
+                branch: master
+                event: lede-update
+              - id: lede-luci
+                url: https://github.com/coolsnowwolf/luci
+                branch: master
+                event: lede-luci-update
+              - id: lede-packages
+                url: https://github.com/coolsnowwolf/packages
+                branch: master
+                event: lede-packages-update
 
     steps:
     - name: 设置缓存目录路径
       id: vars
       run: |
-        echo "cache_path=.cache/${{ matrix.repo_config.id }}" >> $GITHUB_OUTPUT
-        echo "cache_key=commit-${{ matrix.repo_config.id }}" >> $GITHUB_OUTPUT
+        echo "cache_path=.cache/${{ matrix.repo_group.id }}" >> $GITHUB_OUTPUT
+        echo "cache_key=commit-${{ matrix.repo_group.id }}" >> $GITHUB_OUTPUT
 
     - name: 恢复上次缓存的提交哈希
       id: restore-cache
@@ -56,15 +55,25 @@ jobs:
         key: ${{ steps.vars.outputs.cache_key }}-${{ github.run_id }}
         restore-keys: ${{ steps.vars.outputs.cache_key }}-
 
-    - name: 检查 ${{ matrix.repo_config.id }} 更新
+    - name: 检查 ${{ matrix.repo_group.id }} 更新
       id: check-update
       run: |
-        # 克隆目标仓库最新 commit
-        git clone --depth 1 ${{ matrix.repo_config.url }} -b ${{ matrix.repo_config.branch }} source-repo
-        cd source-repo
-        LATEST_HASH=$(git rev-parse HEAD)
-        echo "最新提交: $LATEST_HASH"
-        echo "LATEST_HASH=$LATEST_HASH" >> $GITHUB_ENV  # 提供给触发器使用
+        GROUP_HASH=""
+        for repo in $(echo '${{ toJson(matrix.repo_group.repos) }}' | jq -c '.[]'); do
+          REPO_ID=$(echo $repo | jq -r '.id')
+          REPO_URL=$(echo $repo | jq -r '.url')
+          REPO_BRANCH=$(echo $repo | jq -r '.branch')
+          # 克隆目标仓库最新 commit
+          git clone --depth 1 $REPO_URL -b $REPO_BRANCH source-repo-$REPO_ID
+          cd source-repo-$REPO_ID
+          LATEST_HASH=$(git rev-parse HEAD)
+          echo "仓库 $REPO_ID 最新提交: $LATEST_HASH"
+          GROUP_HASH="$GROUP_HASH$LATEST_HASH"
+          cd ..
+        done
+        GROUP_HASH=$(echo -n "$GROUP_HASH" | sha256sum | awk '{print $1}')
+        echo "组 ${{ matrix.repo_group.id }} 组合哈希: $GROUP_HASH"
+        echo "GROUP_HASH=$GROUP_HASH" >> $GITHUB_ENV  # 提供给触发器使用
 
         # 定位缓存文件
         CACHE_FILE="${{ steps.vars.outputs.cache_path }}/last_commit"
@@ -72,7 +81,7 @@ jobs:
 
         if [[ -f "$CACHE_FILE" ]]; then
           OLD_HASH=$(cat "$CACHE_FILE")
-          if [[ "$OLD_HASH" == "$LATEST_HASH" ]]; then
+          if [[ "$OLD_HASH" == "$GROUP_HASH" ]]; then
             echo "has_update=false" >> "$GITHUB_OUTPUT"
             echo "无新提交"
             exit 0
@@ -80,7 +89,7 @@ jobs:
         fi
 
         # 有更新
-        echo "$LATEST_HASH" > "$CACHE_FILE"
+        echo "$GROUP_HASH" > "$CACHE_FILE"
         echo "has_update=true" >> "$GITHUB_OUTPUT"
         echo "检测到新提交！"
 
@@ -89,12 +98,11 @@ jobs:
       uses: peter-evans/repository-dispatch@v2
       with:
         token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
-        event-type: ${{ matrix.repo_config.event }}
+        event-type: ${{ matrix.repo_group.id }}-update
         client-payload: >-
           {
-            "repo_id": "${{ matrix.repo_config.id }}",
-            "repo_url": "${{ matrix.repo_config.url }}",
-            "commit_hash": "${{ env.LATEST_HASH }}"
+            "group_id": "${{ matrix.repo_group.id }}",
+            "commit_hash": "${{ env.GROUP_HASH }}"
           }
 
     - name: 💾 保存最新 commit 哈希到缓存
