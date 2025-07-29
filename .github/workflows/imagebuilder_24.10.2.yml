@@ -65,7 +65,8 @@ jobs:
         sed -i 's/CONFIG_ISO_IMAGES=y/#CONFIG_ISO_IMAGES is not set/' .config
         sed -i 's/CONFIG_QCOW2_IMAGES=y/#CONFIG_QCOW2_IMAGES is not set/' .config
         sed -i 's/CONFIG_VDI_IMAGES=y/#CONFIG_VDI_IMAGES is not set/' .config
-        sed -i 's/CONFIG_VMDK_IMAGES=y/#CONFIG_VDI_IMAGES is not set/' .config
+        sed -i 's/CONFIG_VMDK_IMAGES=y/#CONFIG_VMDK_IMAGES is not set/' .config
+        sed -i 's/CONFIG_VHDX_IMAGES=y/#CONFIG_VHDX_IMAGES is not set/' .config
         sed -i 's/CONFIG_TARGET_ROOTFS_PARTSIZE=300/CONFIG_TARGET_ROOTFS_PARTSIZE=512/' .config
         sed -i 's/CONFIG_TARGET_PREINIT_IP="192.168.1.1"/CONFIG_TARGET_PREINIT_IP="192.168.10.1"/' .config
         sed -i 's/CONFIG_TARGET_PREINIT_BROADCAST="192.168.1.255"/CONFIG_TARGET_PREINIT_BROADCAST="192.168.10.255"/' .config
@@ -139,11 +140,11 @@ jobs:
         retain_days: 15
         keep_minimum_runs: 10
 
-    - name: 删除旧RReleases
-      uses: ophub/delete-releases-workflows@main
+    - name: 删除旧Releases
+      uses: dev-drprasad/delete-older-releases@v0.3.4
       with:
-        delete_releases: true
-        releases_keep_latest: 25
+        keep_latest: 3
+        delete_expired_data: 15
         delete_workflows: true
         workflows_keep_day: 15
         delete_tags: true
