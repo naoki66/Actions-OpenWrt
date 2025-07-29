@@ -1,4 +1,4 @@
-name: cc
+name: 检查上游tags更新并触发编译仓库
 
 on:
   workflow_dispatch:
