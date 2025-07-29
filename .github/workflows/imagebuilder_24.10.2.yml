@@ -92,7 +92,7 @@ jobs:
       id: compile
       run: |
         cd immortalwrt-imagebuilder-24.10.2-x86-64.Linux-x86_64
-        make image PACKAGES="qemu-ga bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview luci-app-mosdns luci-i18n-mosdns-zh-cn luci-app-lucky luci-i18n-lucky-zh-cn"
+        make image PACKAGES="qemu-ga pppoe-discovery bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview luci-app-mosdns luci-i18n-mosdns-zh-cn luci-app-lucky luci-i18n-lucky-zh-cn"
         echo "FILE_DATE=$(date +"%Y%m%d-%H%M")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
@@ -115,8 +115,8 @@ jobs:
       run: |
         echo "release_tag=imagebuilder24.10.2-x64-${{ env.FILE_DATE }}" >> $GITHUB_OUTPUT
         touch release.txt
-        echo "🟧ImmortalWrt imagebuilder编译信息" >> release.txt
-        echo "⏏️imagebuilder24.10.2-x64" >> release.txt
+        echo "🟧imagebuilder编译信息" >> release.txt
+        echo "⏏️Immortalwrt-24.10.2-x64" >> release.txt
         echo "🔗https://downloads.immortalwrt.org/releases/24.10.2/targets/x86/64/" >> release.txt
         echo "⏰编译完成时间：$(date "+%Y年%m月%d日%H时%M分")" >> release.txt
         echo "TIME2=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV        
