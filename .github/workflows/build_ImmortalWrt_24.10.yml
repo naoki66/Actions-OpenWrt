@@ -11,7 +11,7 @@ on:
 env:
   # ───── 源码与脚本 ─────
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: openwrt-24.10
+  REPO_BRANCH: master
   FEEDS_CONF: DIY_immortalwrt_feeds.conf.default
   CONFIG_FILE: ImmortalWrt_x64.config
   DIY_P1_SH: ImmortalWrt-diy-part1.sh
