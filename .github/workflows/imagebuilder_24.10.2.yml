@@ -79,15 +79,13 @@ jobs:
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/lucky_2.15.8_Openwrt_x86_64_wanji.ipk
         wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.9/luci-app-wechatpush_3.6.9_all.ipk
         wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.9/luci-i18n-wechatpush-zh-cn_25.089.39732.ed90c03_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.7.15-1/luci-24.10_luci-app-passwall_25.7.15-r1_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.7.15-1/luci-24.10_luci-i18n-passwall-zh-cn_25.196.30785.1241432_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.7.15-1/passwall_packages_ipk_x86_64.zip
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.1-1/luci-24.10_luci-app-passwall_25.8.1-r1_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.1-1/luci-24.10_luci-i18n-passwall-zh-cn_25.213.59897.f0cc846_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.1-1/passwall_packages_ipk_x86_64.zip
         unzip ./packages/passwall_packages_ipk_x86_64.zip -d ./packages/
         wget -P ./packages https://github.com/sbwml/luci-app-mosdns/releases/download/v5.3.3-r5/openwrt-24.10-x86_64.tar.gz
         tar --strip-components=1 -xzf ./packages/openwrt-24.10-x86_64.tar.gz -C ./packages/
-        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/luci-app-lucky_2.2.2-r1_all.ipk
-        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
-        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/lucky_2.15.8_Openwrt_x86_64_wanji.ipk
+
         
     - name: 编译
       id: compile
@@ -141,10 +139,10 @@ jobs:
         keep_minimum_runs: 10
 
     - name: 删除旧Releases
-      uses: dev-drprasad/delete-older-releases@v0.3.4
+      uses: ophub/delete-releases-workflows@main
       with:
-        keep_latest: 3
-        delete_expired_data: 15
+        delete_releases: true
+        releases_keep_latest: 15
         delete_workflows: true
         workflows_keep_day: 15
         delete_tags: true
