@@ -12,8 +12,7 @@ env:
   # ───── 源码与脚本 ─────
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  FEEDS_CONF: DIY_lede_feeds.conf.default
-  CONFIG_FILE: x64.config
+  CONFIG_FILE: lede-x64.config
   DIY_P1_SH: lede-diy-part1.sh
   DIY_P2_SH: lede-diy-part2.sh
 
@@ -126,7 +125,7 @@ jobs:
     # 5️⃣ 自定义 feeds，DIY_P1_SH
     - name: 应用自定义feeds和DIY_P1_SH
       run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF lede/feeds.conf.default
+        #### [ -e $FEEDS_CONF ] && mv $FEEDS_CONF lede/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd lede
         $GITHUB_WORKSPACE/$DIY_P1_SH
