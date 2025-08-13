@@ -36,5 +36,4 @@ sed -i "/uci set network.lan.ip6assign='64'/a\nuci set network.lan.ip6hint='eui6
 # 设置RA flags为none
 sed -i "/uci set network.lan.ip6hint='eui64'/a\nuci set network.lan.ra_flags='none'\nuci commit network" package/lean/default-settings/files/zzz-default-settings
 
-# 设置momo的firewall4为软依赖，防止循环依赖
-sed -i '/^DEPENDS:=/ s/firewall4/+firewall4?/' feeds/momo/momo/Makefile
+
