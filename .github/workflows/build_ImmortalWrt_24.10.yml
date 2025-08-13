@@ -123,7 +123,7 @@ jobs:
     # 5️⃣ 自定义 feeds，DIY_P1_SH
     - name: 应用自定义feeds和DIY_P1_SH
       run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF immortalwrt/feeds.conf.default
+        ##[ -e $FEEDS_CONF ] && mv $FEEDS_CONF immortalwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd immortalwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
