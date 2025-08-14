@@ -84,41 +84,6 @@ jobs:
           git clone -b $REPO_BRANCH --single-branch --filter=blob:none $REPO_URL immortalwrt
           ln -sf $PWD/immortalwrt $GITHUB_WORKSPACE/immortalwrt
 
-# 4️⃣  具链缓存
-    - name: 缓存 ccache
-      uses: actions/cache@v4
-      with:
-        path: /workdir/immortalwrt/.ccache
-        key: ccache-immortalwrt-${{ github.ref_name }}
-        restore-keys: ccache-immortalwrt-${{ github.ref_name }}
-
-    - name:  缓存 dl
-      uses: actions/cache@v4
-      with:
-          path: /workdir/immortalwrt/dl
-          key: dl-immortalwrt-${{ hashFiles('feeds.conf.default') }}
-          restore-keys: dl-immortalwrt-${{ hashFiles('feeds.conf.default') }}
-
-    - name: 缓存 toolchain
-      uses: actions/cache@v4
-      with:
-        path: /workdir/immortalwrt/staging_dir
-        key: toolchain-immortalwrt-${{ hashFiles('toolchain/**', 'include/**') }}
-        restore-keys: toolchain-immortalwrt-${{ hashFiles('toolchain/**', 'include/**') }}
-
-    - name: 缓存 feeds
-      uses: actions/cache@v4
-      with:
-          path: /workdir/immortalwrt/feeds
-          key: feeds-immortalwrt-${{ hashFiles('feeds.conf.default') }}
-          restore-keys: feeds-immortalwrt-${{ hashFiles('feeds.conf.default') }}
-
-    - name: 缓存 host tools
-      uses: actions/cache@v4
-      with:
-            path: /workdir/immortalwrt/build_dir/host*
-            key: hosttools-immortalwrt-${{ github.ref_name }}
-            restore-keys: hosttools-immortalwrt-${{ github.ref_name }}
 
     # 5️⃣ 自定义 feeds，DIY_P1_SH
     - name: 应用自定义feeds和DIY_P1_SH
