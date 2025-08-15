@@ -83,43 +83,6 @@ jobs:
           git clone -b $REPO_BRANCH --single-branch --filter=blob:none $REPO_URL lede
           ln -sf $PWD/lede $GITHUB_WORKSPACE/lede
 
-# 4️⃣  具链缓存
-    - name: 缓存 ccache
-      uses: actions/cache@v4
-      with:
-        path: /workdir/lede/.ccache
-        key: ccache-lede-${{ github.ref_name }}
-        restore-keys: ccache-lede-${{ github.ref_name }}
-
-
-    - name: 缓存 dl
-      uses: actions/cache@v4
-      with:
-        path: /workdir/lede/dl
-        key: dl-lede-${{ hashFiles('feeds.conf.default') }}
-        restore-keys: dl-lede-${{ hashFiles('feeds.conf.default') }}
-
-    - name: 缓存 toolchain
-      uses: actions/cache@v4
-      with:
-        path: /workdir/lede/staging_dir
-        key: toolchain-lede-${{ hashFiles('toolchain/**', 'include/**') }}
-        restore-keys: toolchain-lede-${{ hashFiles('toolchain/**', 'include/**') }}
-    - name: 缓存 feeds
-      uses: actions/cache@v4
-      with:
-        path: /workdir/lede/feeds
-        key: feeds-lede-${{ hashFiles('feeds.conf.default') }}
-        restore-keys: feeds-lede-${{ hashFiles('feeds.conf.default') }}
-
-    - name: 缓存 host tools
-      uses: actions/cache@v4
-      with:
-        path: /workdir/lede/build_dir/host*
-        key: hosttools-lede-${{ github.ref_name }}
-        restore-keys: hosttools-lede-${{ github.ref_name }}
-
-
         
 
     # 5️⃣ 自定义 feeds，DIY_P1_SH
