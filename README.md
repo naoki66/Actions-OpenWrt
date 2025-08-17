@@ -50,6 +50,43 @@ DNS-over-HTTPS: https://120.53.53.53/dns-query
 DNS-over-HTTPS (HTTP/3): h3://dns.alidns.com/dns-query
 
 DNS-over-QUIC: quic://dns.alidns.com & doq://dns.alidns.com
+
+
+# alidns
+tls://dns.alidns.com
+https://dns.alidns.com/dns-query
+https://223.6.6.6/dns-query
+https://223.5.5.5/dns-query
+# dnspod
+tls://dns.pub
+tls://1.12.12.12
+tls://120.53.53.53
+https://doh.pub/dns-query
+https://1.12.12.12/dns-query
+https://120.53.53.53/dns-query
+# 360
+tls://dot.360.cn
+https://doh.360.cn/dns-query
+# google
+tls://dns.google
+# Cloudflare
+tls://1.1.1.1
+https://1.1.1.1/dns-query
+https://1.0.0.1/dns-query
+# opendns
+tls://208.67.222.222
+https://doh.opendns.com/dns-query
+# AdGuard
+quic://dns.adguard-dns.com
+quic://dns-unfiltered.adguard.com
+# doh3
+h3://dns.nextdns.io
+h3://dns.cloudflare.com/dns-query
+h3://dns.adguard-dns.com/dns-query
+# tuna
+https://101.6.6.6:8443/dns-query
+tls://dns.tuna.tsinghua.edu.cn:8853
+
 ```
 
 
