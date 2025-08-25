@@ -1,4 +1,4 @@
-name: "构建LEDE-X64固件"
+name: "构建LEDE-X64-24.10固件"
 
 on:
   repository_dispatch:
