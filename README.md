@@ -57,13 +57,11 @@ tls://dns.alidns.com
 https://dns.alidns.com/dns-query
 https://223.6.6.6/dns-query
 https://223.5.5.5/dns-query
+
 # dnspod
-tls://dns.pub
-tls://1.12.12.12
-tls://120.53.53.53
-https://doh.pub/dns-query
-https://1.12.12.12/dns-query
-https://120.53.53.53/dns-query
+DoH：https://doh.pub/dns-query
+DoT：dot.pub
+119.29.29.29
 # 360
 tls://dot.360.cn
 https://doh.360.cn/dns-query
