@@ -66,7 +66,11 @@ DoT：dot.pub
 tls://dot.360.cn
 https://doh.360.cn/dns-query
 # google
+
 tls://dns.google
+DoH 
+https://dns.google/dns-query - RFC 8484（GET 和 POST）
+https://dns.google/resolve？- JSON API (GET)
 # Cloudflare
 tls://1.1.1.1
 https://1.1.1.1/dns-query
