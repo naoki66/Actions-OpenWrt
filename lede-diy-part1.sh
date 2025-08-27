@@ -5,8 +5,8 @@
 
 # Uncomment a feed source
 #sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
-sed -i 's/^src-git luci .*openwrt-23\.05$/#&/' feeds.conf.default
-sed -i 's/^#src-git luci .*openwrt-24\.10$/src-git luci https:\/\/github\.com\/coolsnowwolf\/luci\.git;openwrt-24\.10/' feeds.conf.default
+#sed -i 's/^src-git luci .*openwrt-23\.05$/#&/' feeds.conf.default
+#sed -i 's/^#src-git luci .*openwrt-24\.10$/src-git luci https:\/\/github\.com\/coolsnowwolf\/luci\.git;openwrt-24\.10/' feeds.conf.default
 
 
 # Add a feed source 添加额外软件包
