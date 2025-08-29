@@ -3,7 +3,7 @@ name: 检查上游commits更新并触发编译仓库
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 17 * * *'  # 中国时间每天凌晨1:00（UTC 17:00）
+    - cron: '20 18 * * *'  # 中国时间每天凌晨2:20（UTC 18:20）
 
 jobs:
   check-repos:

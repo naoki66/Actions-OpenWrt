@@ -12,11 +12,11 @@ sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_genera
 sed -i 's/os.date(/&"%Y-%m-%d %H:%M:%S"/' package/lean/autocore/files/x86/index.htm
 
 # 把密码改成空
-sed -i 's@.*CYXluq4wUazHjmCDBCqXF*@#&@g' package/lean/default-settings/files/zzz-default-settings
+#sed -i 's@.*CYXluq4wUazHjmCDBCqXF*@#&@g' package/lean/default-settings/files/zzz-default-settings
 
 #干掉跑分程序
-sed -i 's, <%=luci.sys.exec("cat /etc/bench.log") or " "%><,<,g'  package/lean/autocore/files/x86/index.htm
-rm -rf ./feeds/packages/utils/coremark
+#sed -i 's, <%=luci.sys.exec("cat /etc/bench.log") or " "%><,<,g'  package/lean/autocore/files/x86/index.htm
+#rm -rf ./feeds/packages/utils/coremark
 
 # 删除WAN6接口配置
 #sed -i "/uci commit fstab/a\uci delete network.wan6" package/lean/default-settings/files/zzz-default-settings
