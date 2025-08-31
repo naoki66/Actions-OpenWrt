@@ -79,9 +79,9 @@ jobs:
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/lucky_2.15.8_Openwrt_x86_64_wanji.ipk
         wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-app-wechatpush_3.6.10_all.ipk
         wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-i18n-wechatpush-zh-cn_git-25.089.39732-ed90c03_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.5-2/luci-24.10_luci-app-passwall_25.8.5-r2_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.5-2/luci-24.10_luci-i18n-passwall-zh-cn_25.217.16947.74f7fa3_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.5-2/passwall_packages_ipk_x86_64.zip
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.26-1/luci-24.10_luci-app-passwall_25.8.26-r1_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.26-1/luci-24.10_luci-i18n-passwall-zh-cn_25.238.12513.368371e_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.26-1/passwall_packages_ipk_x86_64.zip
         unzip ./packages/passwall_packages_ipk_x86_64.zip -d ./packages/
         wget -P ./packages https://github.com/sbwml/luci-app-mosdns/releases/download/v5.3.3-r5/openwrt-24.10-x86_64.tar.gz
         tar --strip-components=1 -xzf ./packages/openwrt-24.10-x86_64.tar.gz -C ./packages/
