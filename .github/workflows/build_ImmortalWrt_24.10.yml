@@ -6,7 +6,7 @@ on:
       - immortalwrt-group-update
   workflow_dispatch:
   schedule:
-    - cron: '40 19 */7 * *'    # 每 7 天北京时间 03:40
+    - cron: '20 16 */7 * *'    # 每 7 天北京时间 00:20
 
 env:
   # ───── 源码与脚本 ─────
