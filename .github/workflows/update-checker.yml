@@ -111,3 +111,11 @@ jobs:
       with:
         path: ${{ steps.vars.outputs.cache_path }}
         key: ${{ steps.vars.outputs.cache_key }}
+
+
+    - name: 删除运行的工作流
+      uses: Mattraks/delete-workflow-runs@v2
+      with:
+        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        retain_days: 7
+        keep_minimum_runs: 4
