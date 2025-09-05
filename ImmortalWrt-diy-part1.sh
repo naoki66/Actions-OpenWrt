@@ -7,4 +7,6 @@
 # Add a feed source
 #echo 'src-git lucky https://github.com/gdy666/luci-app-lucky.git' >> feeds.conf.default
 git clone  https://github.com/gdy666/luci-app-lucky.git package/lucky
+echo "src-git nikki https://github.com/nikkinikki-org/OpenWrt-nikki.git;main" >> "feeds.conf.default"
+
 
