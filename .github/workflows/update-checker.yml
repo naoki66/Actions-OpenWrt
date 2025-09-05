@@ -45,15 +45,15 @@ jobs:
       id: vars
       run: |
         echo "cache_path=.cache/${{ matrix.repo_group.id }}" >> $GITHUB_OUTPUT
-        echo "cache_key=commit-${{ matrix.repo_group.id }}" >> $GITHUB_OUTPUT
+        echo "cache_key=commit-${{ matrix.repo_group.id }}-${{ github.run_id }}" >> $GITHUB_OUTPUT
 
     - name: 恢复上次缓存的提交哈希
       id: restore-cache
       uses: actions/cache@v4
       with:
         path: ${{ steps.vars.outputs.cache_path }}
-        key: ${{ steps.vars.outputs.cache_key }}
-        restore-keys: ${{ steps.vars.outputs.cache_key }}
+        key: commit-${{ matrix.repo_group.id }}-
+        restore-keys: commit-${{ matrix.repo_group.id }}-
 
     - name: 检查 ${{ matrix.repo_group.id }} 更新
       id: check-update
