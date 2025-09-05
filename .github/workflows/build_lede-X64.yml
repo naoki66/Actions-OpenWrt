@@ -202,7 +202,6 @@ jobs:
       uses: Mattraks/delete-workflow-runs@v2
       with:
         token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
-        workflow_name: build_lede-X64.yml
         retain_days: 5
         keep_minimum_runs: 3
 

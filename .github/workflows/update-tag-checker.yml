@@ -93,7 +93,5 @@ jobs:
         with:
           token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
           repository: ${{ github.repository }}
-          workflow_name: update-tag-checker.yml  # 指定要清理的工作流名称
           retain_days: 5
           keep_minimum_runs: 4
-          exclude_latest_run: true  # 排除当前运行不被删除          
