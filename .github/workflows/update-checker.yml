@@ -47,12 +47,13 @@ jobs:
         echo "cache_path=.cache/${{ matrix.repo_group.id }}" >> $GITHUB_OUTPUT
         echo "cache_key=commit-${{ matrix.repo_group.id }}-${{ github.run_id }}" >> $GITHUB_OUTPUT
 
+    # 修改恢复缓存步骤
     - name: 恢复上次缓存的提交哈希
       id: restore-cache
       uses: actions/cache@v4
       with:
         path: ${{ steps.vars.outputs.cache_path }}
-        key: commit-${{ matrix.repo_group.id }}-
+        key: ${{ steps.vars.outputs.cache_key }}
         restore-keys: commit-${{ matrix.repo_group.id }}-
 
     - name: 检查 ${{ matrix.repo_group.id }} 更新
@@ -63,13 +64,10 @@ jobs:
           REPO_ID=$(echo $repo | jq -r '.id')
           REPO_URL=$(echo $repo | jq -r '.url')
           REPO_BRANCH=$(echo $repo | jq -r '.branch')
-          # 克隆目标仓库最新 commit
-          git clone --depth 1 $REPO_URL -b $REPO_BRANCH source-repo-$REPO_ID
-          cd source-repo-$REPO_ID
-          LATEST_HASH=$(git rev-parse HEAD)
+          # 直接获取最新 commit 哈希，避免完整克隆
+          LATEST_HASH=$(git ls-remote $REPO_URL $REPO_BRANCH | cut -f1)
           echo "仓库 $REPO_ID 最新提交: $LATEST_HASH"
           GROUP_HASH="$GROUP_HASH$LATEST_HASH"
-          cd ..
         done
         GROUP_HASH=$(echo -n "$GROUP_HASH" | sha256sum | awk '{print $1}')
         echo "组 ${{ matrix.repo_group.id }} 组合哈希: $GROUP_HASH"
@@ -79,8 +77,10 @@ jobs:
         CACHE_FILE="${{ steps.vars.outputs.cache_path }}/last_commit"
         mkdir -p "$(dirname "$CACHE_FILE")"
 
+        # 在检查更新步骤中添加
         if [[ -f "$CACHE_FILE" ]]; then
           OLD_HASH=$(cat "$CACHE_FILE")
+          echo "缓存中的旧哈希: $OLD_HASH"
           if [[ "$OLD_HASH" == "$GROUP_HASH" ]]; then
             echo "has_update=false" >> "$GITHUB_OUTPUT"
             echo "无新提交"
@@ -118,5 +118,5 @@ jobs:
       with:
         token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
         repository: ${{ github.repository }}
-        retain_days: 5
-        keep_minimum_runs: 4
+        retain_days: 3
+        keep_minimum_runs: 3

@@ -93,5 +93,5 @@ jobs:
         with:
           token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
           repository: ${{ github.repository }}
-          retain_days: 5
-          keep_minimum_runs: 4
+          retain_days: 3
+          keep_minimum_runs: 3
