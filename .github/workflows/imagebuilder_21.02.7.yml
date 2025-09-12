@@ -72,15 +72,17 @@ jobs:
     - name: 添加非官方包
       run: |
         cd immortalwrt-imagebuilder-21.02.7-x86-64.Linux-x86_64
-        wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.9.2/ddns-go_6.9.2-r11_x86_64.ipk
-        wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.9.2/luci-app-ddns-go_1.5.3-r20250515_all.ipk
+        wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.12.0/ddns-go_6.12.0-r11_x86_64.ipk
+        wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.12.0/luci-app-ddns-go_1.5.4-r20250601_all.ipk
+        wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.12.0/luci-i18n-ddns-go-zh-cn_25.135.22407.89837ec_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/luci-app-lucky_2.2.2-r1_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/lucky_2.15.8_Openwrt_x86_64_wanji.ipk        
         wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v2.06.2/luci-app-serverchan_2.06.2_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.5-2/luci-19.07_luci-app-passwall_25.8.5-2_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.5-2/luci-19.07_luci-i18n-passwall-zh-cn_25.8.5-2_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.8.5-2/passwall_packages_ipk_x86_64.zip
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.9.3-1/luci-19.07_luci-app-passwall_25.9.3-1_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.9.3-1/luci-19.07_luci-i18n-passwall-zh-cn_25.9.3-1_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.9.3-1/passwall_packages_ipk_x86_64.zip
+        unzip ./packages/passwall_packages_ipk_x86_64.zip -d ./packages/
  
         
     - name: 编译
