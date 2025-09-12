@@ -5,8 +5,9 @@ on:
     types: 
       - immortalwrt-group-update
   workflow_dispatch:
-  schedule:
-    - cron: '20 16 */7 * *'    # 每 7 天北京时间 00:20
+  # 已注释掉定期自动编译，仅在上游更新或手动触发时编译
+  # schedule:
+  #   - cron: '20 16 */7 * *'    # 每 7 天北京时间 00:20
 
 env:
   # ───── 源码与脚本 ─────
@@ -214,3 +215,5 @@ jobs:
       with:
           keep_latest: 12
           delete_tags: true
+# 重编号所有步骤，确保连续
+# 例如将当前的5️⃣调整为4️⃣，以此类推
