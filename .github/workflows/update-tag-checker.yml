@@ -95,3 +95,5 @@ jobs:
           repository: ${{ github.repository }}
           retain_days: 3
           keep_minimum_runs: 3
+          dry_run: false
+
