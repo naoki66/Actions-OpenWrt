@@ -115,7 +115,7 @@ jobs:
         touch release.txt
         echo " ⏏️ imagebuilder编译信息" >> release.txt
         echo "ImmortalWrt-23.05.6-x64" >> release.txt
-        echo "🔗https://downloads.immortalwrt.org/releases/23.05.4/targets/x86/64/" >> release.txt
+        echo "🔗https://downloads.immortalwrt.org/releases/23.05.6/targets/x86/64/" >> release.txt
         echo "⏰编译完成时间：$(date "+%Y年%m月%d日%H时%M分")" >> release.txt
         echo "TIME2=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
