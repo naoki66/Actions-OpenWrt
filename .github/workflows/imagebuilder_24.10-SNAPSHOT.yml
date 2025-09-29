@@ -76,7 +76,7 @@ jobs:
         cd immortalwrt-imagebuilder-24.10-SNAPSHOT-x86-64.Linux-x86_64
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.4/luci-app-lucky_2.2.2-r1_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.4/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
-        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.15.8/lucky_2.15.8_Openwrt_x86_64_wanji.ipk
+        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.4/lucky_2.19.4_Openwrt_x86_64.ipk
         wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-app-wechatpush_3.6.10_all.ipk
         wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-i18n-wechatpush-zh-cn_git-25.089.39732-ed90c03_all.ipk
         wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.9.23-1/luci-24.10_luci-app-passwall_25.9.23-r1_all.ipk
