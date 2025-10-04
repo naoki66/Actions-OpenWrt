@@ -25,9 +25,8 @@ env:
   # ───── 构建参数 ─────
   TZ: Asia/Shanghai
   DEBIAN_FRONTEND: noninteractive
-  CCACHE_DIR: ${{ github.workspace }}/.ccache
-  CCACHE_COMPRESS: '1'
-  CCACHE_MAXSIZE: "2G"
+
+
 
 jobs:
   build-firmware:
@@ -63,19 +62,20 @@ jobs:
         sudo docker system prune -af --volumes || true
         sudo -E apt-get -qq update
         sudo -E apt-get -qq install -y --no-install-recommends \
-            ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 \
-            ccache clang cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
-            git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev \
-            libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev \
-            libreadline-dev libssl-dev libtool llvm lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full \
-            patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons \
-            squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev zstd
+            ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+            bzip2 ccache clang cmake cpio curl device-tree-compiler ecj fastjar flex gawk gettext gcc-multilib \
+            g++-multilib git gnutls-dev gperf haveged help2man intltool lib32gcc-s1 libc6-dev-i386 libelf-dev \
+            libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses-dev libpython3-dev \
+            libreadline-dev libssl-dev libtool libyaml-dev libz-dev lld llvm lrzsz mkisofs msmtp nano \
+            ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip python3-ply python3-docutils \
+            python3-pyelftools qemu-utils re2c rsync scons squashfs-tools subversion swig texinfo uglifyjs \
+            upx-ucl unzip vim wget xmlto xxd zlib1g-dev zstd
+
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir 
         sudo chown $USER:$GROUPS /workdir
-
 
 # 3️⃣ 克隆源码
     - name: 克隆 ImmortalWrt 源码
@@ -117,13 +117,13 @@ jobs:
     - name: 通过API生成上游一周更新日志
       run: |
         echo "CHANGELOG_CONTENT<<EOF" > changelog_env.txt
-        echo "-  🔧 [immortalwrt 主仓库](https://github.com/immortalwrt/immortalwrt)" >> changelog_env.txt
+        echo "-  🔧 [immortalwrt_主仓库](https://github.com/immortalwrt/immortalwrt)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/immortalwrt/immortalwrt/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
-        echo "-  📦 [immortalwrt packages](https://github.com/immortalwrt/packages)" >> changelog_env.txt
+        echo "-  📦 [immortalwrt_packages](https://github.com/immortalwrt/packages)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/immortalwrt/packages/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
-        echo "-  🖥️ [immortalwrt luci](https://github.com/immortalwrt/luci)" >> changelog_env.txt
+        echo "-  🖥️ [immortalwrt_luci](https://github.com/immortalwrt/luci)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/immortalwrt/luci/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
         echo "EOF" >> changelog_env.txt
@@ -136,9 +136,16 @@ jobs:
           cd immortalwrt
           make defconfig
           make download -j8
+          # 清理不完整的下载文件
           find dl -size -1024c -exec ls -l {} \;
           find dl -size -1024c -exec rm -f {} \;
-          
+          df -hT
+          # 显示下载目录大小
+          du -sh dl
+          # 进一步清理不必要的文件
+          sudo rm -rf /tmp/* /var/tmp/*
+
+
     # 🔟 编译固件
     - name: 编译固件
       id: compile
@@ -170,8 +177,7 @@ jobs:
         echo "ELAPSED=$ELAPSED_FORMATTED" >> $GITHUB_ENV
         echo "::notice::总耗时: $ELAPSED"
         #检查固件目录内容
-        ls -lh ${{ env.FIRMWARE_DIR }}     
-
+        ls -lh ${{ env.FIRMWARE_DIR }}
 
     # 1️⃣3️⃣ 上传固件产物
     - name: 上传固件产物

@@ -69,7 +69,7 @@ jobs:
             python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion \
             swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
 
-            
+
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
@@ -84,13 +84,15 @@ jobs:
           git clone -b $REPO_BRANCH --single-branch --filter=blob:none $REPO_URL lede
           ln -sf $PWD/lede $GITHUB_WORKSPACE/lede
 
+
     # 4️⃣ 自定义 feeds，DIY_P1_SH
     - name: 应用自定义feeds和DIY_P1_SH
       run: |
-        #### [ -e $FEEDS_CONF ] && mv $FEEDS_CONF lede/feeds.conf.default
+        ## [ -e $FEEDS_CONF ] && mv $FEEDS_CONF lede/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd lede
         $GITHUB_WORKSPACE/$DIY_P1_SH
+
 
     # 5️⃣ 更新和安装 feeds
     - name: 更新和安装 feeds
@@ -98,6 +100,7 @@ jobs:
         cd lede
         ./scripts/feeds update -a
         ./scripts/feeds install -a -f
+
 
     # 6️⃣ 自定义配置config，DIY_P2_SH
     - name: 自定义配置config，DIY_P2_SH
@@ -108,17 +111,18 @@ jobs:
         cd lede
         $GITHUB_WORKSPACE/$DIY_P2_SH        
 
+
     # 7️⃣ 通过API生成上游一周更新日志
     - name: 通过API生成上游一周更新日志
       run: |
         echo "CHANGELOG_CONTENT<<EOF" > changelog_env.txt
-        echo "-  🔧 [coolsnowwolf lede主仓库](https://github.com/coolsnowwolf/lede)" >> changelog_env.txt
+        echo "-  🔧 [coolsnowwolf_lede主仓库](https://github.com/coolsnowwolf/lede)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/coolsnowwolf/lede/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
-        echo "-  📦 [coolsnowwolf packages](https://github.com/coolsnowwolf/packages)" >> changelog_env.txt
+        echo "-  📦 [coolsnowwolf_packages](https://github.com/coolsnowwolf/packages)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/coolsnowwolf/packages/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
-        echo "-  🖥️ [coolsnowwolf luci](https://github.com/coolsnowwolf/luci)" >> changelog_env.txt
+        echo "-  🖥️ [coolsnowwolf_luci](https://github.com/coolsnowwolf/luci)" >> changelog_env.txt
         curl -s "https://api.github.com/repos/coolsnowwolf/luci/commits?since=$(date -d '-7 days' --iso-8601=s)" \
           | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
         echo "EOF" >> changelog_env.txt
@@ -205,7 +209,7 @@ jobs:
       uses: Mattraks/delete-workflow-runs@v2
       with:
         token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
-        retain_days: 5
+        retain_days: 3
         keep_minimum_runs: 3
 
     # 1️⃣5️⃣ 清理旧版本
@@ -217,3 +221,4 @@ jobs:
       with:
           keep_latest: 12
           delete_tags: true
+          
