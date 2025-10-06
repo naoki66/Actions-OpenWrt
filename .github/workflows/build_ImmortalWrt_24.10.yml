@@ -13,7 +13,6 @@ env:
   # ───── 源码与脚本 ─────
   REPO_URL: https://github.com/immortalwrt/immortalwrt
   REPO_BRANCH: openwrt-24.10
-  FEEDS_CONF: DIY_immortalwrt_feeds.conf.default
   CONFIG_FILE: ImmortalWrt_x64.config
   DIY_P1_SH: ImmortalWrt-diy-part1.sh
   DIY_P2_SH: ImmortalWrt-diy-part2.sh
@@ -74,12 +73,12 @@ jobs:
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
-        sudo mkdir -p /workdir 
-        sudo chown $USER:$GROUPS /workdir
+        sudo mkdir -p /mnt/workdir 
+        sudo chown $USER:$GROUPS /mnt/workdir
 
 # 3️⃣ 克隆源码
     - name: 克隆 ImmortalWrt 源码
-      working-directory: /workdir
+      working-directory: /mnt/workdir
       run: |
           df -hT $PWD
           git clone -b $REPO_BRANCH --single-branch --filter=blob:none $REPO_URL immortalwrt
