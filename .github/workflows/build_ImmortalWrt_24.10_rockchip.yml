@@ -1,4 +1,4 @@
-name: "构建immortalwrt24.10-RFastRhino_R68S固件"
+name: "构建immortalwrt24.10-R68S固件"
 
 on:
   repository_dispatch:
