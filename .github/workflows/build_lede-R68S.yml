@@ -1,4 +1,4 @@
-name: "构建LEDE-_R68S固件"
+name: "构建LEDE-R68S固件"
 
 on:
   repository_dispatch:
