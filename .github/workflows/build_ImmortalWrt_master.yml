@@ -1,4 +1,4 @@
-name: "构建immortalwrt-24.10-X64固件"
+name: "构建immortalwrt-master-X64固件"
 
 on:
   repository_dispatch:
@@ -12,8 +12,8 @@ on:
 env:
   # ───── 源码与脚本 ─────
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: openwrt-24.10
-  CONFIG_FILE: ImmortalWrt-24.10-x64.config
+  REPO_BRANCH: master
+  CONFIG_FILE: ImmortalWrt-x64-master.config
   DIY_P1_SH: ImmortalWrt-diy-part1.sh
   DIY_P2_SH: ImmortalWrt-diy-part2.sh
 
@@ -32,7 +32,7 @@ jobs:
     name: 构建固件
     runs-on: ubuntu-22.04
     concurrency:
-      group: immortalwrt-x64-24.10-${{ github.ref }}  # 按分支隔离并发
+      group: immortalwrt-x64-master-${{ github.ref }}  # 按分支隔离并发
       cancel-in-progress: true             # 取消旧任务，执行最新任务
     permissions:
       contents: write   # 允许推送构建产物到仓库
@@ -183,7 +183,7 @@ jobs:
       if: env.UPLOAD_FIRMWARE == 'true'
       uses: actions/upload-artifact@v4
       with:
-          name: immortalwrt-24.10-X64-${{ github.run_number }}
+          name: immortalwrt-master-X64-${{ github.run_number }}
           path: ${{ env.FIRMWARE_DIR }}
 
    # 1️⃣4️⃣ 创建 GitHub 发布版本
@@ -193,8 +193,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}      
       with:
-          tag_name: immortalwrt-24.10-X64-${{ env.RELEASE_TAG }}
-          name: immortalwrt-24.10-X64-${{ env.RELEASE_TAG }}
+          tag_name: immortalwrt-master-X64-${{ env.RELEASE_TAG }}
+          name: immortalwrt-master-X64-${{ env.RELEASE_TAG }}
           body: |
             📦 **编译时间段**  
             ⏰ 从 **${{ env.TIME0 }}** 到 **${{ env.TIME1 }}**  
