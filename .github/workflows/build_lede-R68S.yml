@@ -32,7 +32,7 @@ jobs:
     name: 构建固件
     runs-on: ubuntu-22.04
     concurrency:
-      group: lede-${{ github.ref }}  # 按分支隔离并发
+      group: lede-r68s-${{ github.ref }}  # 按分支隔离并发
       cancel-in-progress: true             # 取消旧任务，执行最新任务
     permissions:
       contents: write   # 允许推送构建产物到仓库
