@@ -79,9 +79,9 @@ jobs:
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-app-lucky_2.2.2-r1_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/lucky_2.19.5_Openwrt_x86_64.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.12.1-1/luci-app-passwall_25.12.1-r1_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.12.1-1/luci-i18n-passwall-zh-cn_25.12.1_all.ipk
-        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.12.1-1/passwall_packages_ipk_x86_64.zip
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.11.1-1/luci-19.07_luci-app-passwall_25.11.1-1_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.11.1-1/luci-19.07_luci-i18n-passwall-zh-cn_25.11.1-1_all.ipk
+        wget -P ./packages https://github.com/xiaorouji/openwrt-passwall/releases/download/25.11.1-1/passwall_packages_ipk_x86_64.zip
         unzip ./packages/passwall_packages_ipk_x86_64.zip -d ./packages/
  
         
