@@ -74,27 +74,27 @@ jobs:
     - name: 添加非官方包
       run: |
         cd immortalwrt-imagebuilder-25.12-SNAPSHOT-x86-64.Linux-x86_64
-        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-app-lucky_2.2.2-r1_all.ipk
-        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
-        wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/lucky_2.19.5_Openwrt_x86_64.ipk
-        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-app-wechatpush_3.6.10_all.ipk
-        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-i18n-wechatpush-zh-cn_git-25.089.39732-ed90c03_all.ipk
-        wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.9-1/luci-app-passwall_26.1.9-r1_all.ipk
+        #wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-app-lucky_2.2.2-r1_all.ipk
+        #wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
+        #wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/lucky_2.19.5_Openwrt_x86_64.ipk
+        #wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-app-wechatpush_3.6.10_all.ipk
+        #wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-i18n-wechatpush-zh-cn_git-25.089.39732-ed90c03_all.ipk
+        wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.9-1/luci-i18n-passwall-zh-cn-26.1.9.apk
         wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.9-1/luci-i18n-passwall-zh-cn_26.1.9_all.ipk
-        wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.9-1/passwall_packages_ipk_x86_64.zip
-        unzip ./packages/passwall_packages_ipk_x86_64.zip -d ./packages/
-        wget -P ./packages https://github.com/sbwml/luci-app-mosdns/releases/download/v5.3.3-r5/openwrt-24.10-x86_64.tar.gz
-        tar --strip-components=1 -xzf ./packages/openwrt-24.10-x86_64.tar.gz -C ./packages/
-        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/rtp2httpd_3.6.2-r1_x86_64.ipk
-        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/luci-app-rtp2httpd_3.6.2-r1_all.ipk
-        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/luci-i18n-rtp2httpd-zh-cn_3.6.2_all.ipk
+        wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.9-1/passwall_packages_apk_x86_64.zip
+        unzip ./packages/passwall_packages_apk_x86_64.zip -d ./packages/
+        #wget -P ./packages https://github.com/sbwml/luci-app-mosdns/releases/download/v5.3.3-r5/openwrt-24.10-x86_64.tar.gz
+        #tar --strip-components=1 -xzf ./packages/openwrt-24.10-x86_64.tar.gz -C ./packages/
+        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/rtp2httpd-3.6.2-r1_x86_64.apk
+        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/luci-app-rtp2httpd-3.6.2-r1.apk
+        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/luci-i18n-rtp2httpd-zh-cn-3.6.2.apk
 
         
     - name: 编译
       id: compile
       run: |
         cd immortalwrt-imagebuilder-25.12-SNAPSHOT-x86-64.Linux-x86_64
-        make image PACKAGES="qemu-ga pppoe-discovery bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview luci-app-mosdns luci-i18n-mosdns-zh-cn luci-app-lucky luci-i18n-lucky-zh-cn luci-i18n-uhttpd-zh-cn luci-i18n-rtp2httpd-zh-cn"
+        make image PACKAGES="qemu-ga pppoe-discovery bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn  luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview  luci-i18n-uhttpd-zh-cn luci-i18n-rtp2httpd-zh-cn"
         echo "FILE_DATE=$(date +"%Y%m%d-%H%M")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
