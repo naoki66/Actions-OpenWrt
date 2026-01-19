@@ -193,8 +193,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}      
       with:
-          tag_name: immortalwrt-24.10-X64-${{ env.RELEASE_TAG }}
-          name: immortalwrt-24.10-X64-${{ env.RELEASE_TAG }}
+          tag_name: ${{ env.RELEASE_TAG }}-immortalwrt-24.10-X64
+          name: ${{ env.RELEASE_TAG }}-immortalwrt-24.10-X64
           body: |
             📦 **编译时间段**  
             ⏰ 从 **${{ env.TIME0 }}** 到 **${{ env.TIME1 }}**  

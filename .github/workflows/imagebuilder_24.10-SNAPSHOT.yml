@@ -112,7 +112,7 @@ jobs:
     - name: 创建 release 标签
       id: tag
       run: |
-        echo "release_tag=imagebuilder24.10.2-SNAPSHOT-x64-${{ env.FILE_DATE }}" >> $GITHUB_OUTPUT
+        echo "release_tag=${{ env.FILE_DATE }}-imagebuilder24.10.2-SNAPSHOT-x64" >> $GITHUB_OUTPUT
         touch release.txt
         echo " ⏏️ imagebuilder编译信息" >> release.txt
         echo "Immortalwrt-24.10.2-SNAPSHOT-x64" >> release.txt
