@@ -68,10 +68,10 @@ jobs:
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/lucky_2.19.4_Openwrt_arm64_wanji.ipk
         wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-app-wechatpush_3.6.10_all.ipk
         wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-i18n-wechatpush-zh-cn_git-25.089.39732-ed90c03_all.ipk
-        wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.17-1/luci-app-passwall_26.1.17-r1_all.ipk
-        wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.17-1/luci-i18n-passwall-zh-cn_26.1.17_all.ipk
-        wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.17-1/passwall_packages_ipk_aarch64_cortex-a53.zip
-        unzip ./packages/passwall_packages_ipk_aarch64_cortex-a53.zip -d ./packages/
+        #wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.30-1/23.05-24.10_luci-app-passwall_26.1.30-r1_all.ipk
+        #wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.30-1/23.05-24.10_luci-i18n-passwall-zh-cn_26.1.30_all.ipk
+        #wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.17-1/passwall_packages_ipk_aarch64_cortex-a53.zip
+        #unzip ./packages/passwall_packages_ipk_aarch64_cortex-a53.zip -d ./packages/
 
 
         
