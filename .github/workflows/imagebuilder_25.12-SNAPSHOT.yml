@@ -86,10 +86,10 @@ jobs:
         #wget -P ./packages https://github.com/sbwml/luci-app-mosdns/releases/download/v5.3.3-r5/openwrt-24.10-x86_64.tar.gz
         #tar --strip-components=1 -xzf ./packages/openwrt-24.10-x86_64.tar.gz -C ./packages/
         wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/rtp2httpd-3.6.2-r1_x86_64.apk
-        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/luci-app-rtp2httpd-3.6.2-r1.apk
-        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/luci-i18n-rtp2httpd-zh-cn-3.6.2.apk
-
-        
+        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.7.0/luci-app-rtp2httpd-3.7.0-r1.apk
+        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.7.0/luci-i18n-rtp2httpd-zh-cn-3.7.0.apk
+        wget -P ./packages https://github.com/JasonYANG170/luci-app-wechatpush/releases/download/v25.12/luci-app-wechatpush-x86_64.zip
+        unzip ./packages/luci-app-wechatpush-x86_64.zip -d ./packages/
     - name: 编译
       id: compile
       run: |
