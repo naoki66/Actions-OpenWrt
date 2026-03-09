@@ -117,33 +117,47 @@ jobs:
         cd immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64
         mkdir -p ./packages
         
-        # 使用 downloads.sourceforge.net 源地址（绕过 master.dl 的重定向问题）
+        # 使用 downloads.sourceforge.net 作为主源（更稳定）
         BASE="https://downloads.sourceforge.net/project/openwrt-passwall-build/releases/packages-24.10/x86_64"
         
-        # 下载 passwall_packages 下的所有 .ipk
-        wget --mirror --no-parent --no-verbose \
+        echo "开始下载 passwall_packages..."
+        wget --mirror --no-parent --no-verbose --adjust-extension --trust-server-names \
             -e robots=off \
             --accept-regex '.*\.ipk$' \
-            --reject-regex 'index\.html.*' \
+            --reject-regex 'index\.html.*|.*\.gz|.*\.sig|.*\.manifest' \
             "${BASE}/passwall_packages/" \
             -P ./packages/tmp_passwall || true
         
-        # 下载 passwall_luci 下的所有 .ipk
-        wget --mirror --no-parent --no-verbose \
+        echo "开始下载 passwall_luci..."
+        wget --mirror --no-parent --no-verbose --adjust-extension --trust-server-names \
             -e robots=off \
             --accept-regex '.*\.ipk$' \
-            --reject-regex 'index\.html.*' \
+            --reject-regex 'index\.html.*|.*\.gz|.*\.sig|.*\.manifest' \
             "${BASE}/passwall_luci/" \
             -P ./packages/tmp_luci || true
         
-        echo "已下载的 passwall_packages 包："
-        ls -lh ./packages/tmp_passwall/*.ipk 2>/dev/null | sort || echo "无 .ipk 文件下载成功（检查网络或路径）"
-        echo "已下载的 passwall_luci 包："
-        ls -lh ./packages/tmp_luci/*.ipk 2>/dev/null | sort || echo "无 .ipk 文件下载成功（检查网络或路径）"
+        # 检查临时目录是否有文件，并输出详情
+        echo "passwall_packages 下载结果（临时目录）："
+        if ls ./packages/tmp_passwall/*.ipk >/dev/null 2>&1; then
+          ls -lh ./packages/tmp_passwall/*.ipk | sort
+        else
+          echo "passwall_packages 无 .ipk 下载成功（可能网络/重定向问题）"
+        fi
         
-        # 移动所有 .ipk 到 ./packages，并清理临时目录
+        echo "passwall_luci 下载结果（临时目录）："
+        if ls ./packages/tmp_luci/*.ipk >/dev/null 2>&1; then
+          ls -lh ./packages/tmp_luci/*.ipk | sort
+        else
+          echo "passwall_luci 无 .ipk 下载成功（可能网络/重定向问题）"
+        fi
+        
+        # 移动并清理
         find ./packages/tmp_* -type f -name '*.ipk' -exec mv -f {} ./packages/ \; 2>/dev/null || true
         rm -rf ./packages/tmp_* ./packages/*.html* ./packages/robots.txt 2>/dev/null || true
+        
+        # 最终检查整个 ./packages（包括之前步骤的 ipk）
+        echo "最终 ./packages 目录所有 ipk 文件："
+        ls -lh ./packages/*.ipk 2>/dev/null | sort || echo "无任何 ipk 文件（所有下载均失败）"
 
         
     - name: 编译
