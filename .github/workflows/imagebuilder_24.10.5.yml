@@ -21,10 +21,6 @@ jobs:
       run: |
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
         sudo docker image prune --all --force
-        sudo -E apt-get -qq update
-        sudo -E apt-get -qq install ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
-        sudo -E apt-get -qq autoremove --purge
-        sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
 
 
@@ -39,19 +35,50 @@ jobs:
 
     - name: 安装依赖文件
       run: |
-        sudo -E apt update -y
-        sudo -E apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
-        bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
-        git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev \
-        libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz \
-        mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools \
-        libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip zstd \
-        vim wget xmlto xxd zlib1g-dev python3-setuptools
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq --no-install-recommends \
+          build-essential ccache ecj fastjar file g++ gawk \
+          gettext git java-propose-classpath libelf-dev libglib2.0-dev \
+          libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev \
+          libncursesw5-dev libpython3-dev libreadline-dev libssl-dev \
+          python3 python3-distutils python3-setuptools rsync subversion \
+          swig time unzip wget xz-utils zlib1g-dev
+        sudo apt-get autoremove -y && sudo apt-get clean
 
-    - name: 下载imagebuilder源码
+    - name: 下载 ImmortalWrt ImageBuilder（多镜像 fallback）
       run: |
-        wget https://mirror.nju.edu.cn/immortalwrt/releases/24.10.5/targets/x86/64/immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64.tar.zst
-        tar -I zstd -x -f immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64.tar.zst
+        IMG_NAME="immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64.tar.zst"
+        
+        # 多镜像列表，按优先级排序（nju 最快 → 官方 → sjtu）
+        URLS=(
+          "https://mirror.nju.edu.cn/immortalwrt/releases/24.10.5/targets/x86/64/$IMG_NAME"
+          "https://downloads.immortalwrt.org/releases/24.10.5/targets/x86/64/$IMG_NAME"
+          "https://mirror.sjtu.edu.cn/immortalwrt/releases/24.10.5/targets/x86/64/$IMG_NAME"
+        )
+        
+        DOWNLOADED=false
+        
+        for url in "${URLS[@]}"; do
+          echo "尝试从 $url 下载..."
+          if wget --tries=3 --timeout=30 --show-progress -O "$IMG_NAME" "$url"; then
+            echo "下载成功：$IMG_NAME"
+            DOWNLOADED=true
+            break
+          else
+            echo "下载失败，尝试下一个镜像..."
+            rm -f "$IMG_NAME"
+          fi
+        done
+        
+        if [ "$DOWNLOADED" = false ]; then
+          echo "错误：所有镜像均下载失败！"
+          exit 1
+        fi
+        
+        echo "开始解压..."
+        tar -I zstd -x -f "$IMG_NAME" --overwrite
+        rm -f "$IMG_NAME"  # 解压完删除原文件，节省空间
+        echo "ImageBuilder 准备完成"
         
 
     - name: 修改配置和编译文件
@@ -85,49 +112,37 @@ jobs:
         wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.11.0/luci-app-rtp2httpd_3.11.0-r1_all.ipk
         wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.11.0/luci-i18n-rtp2httpd-zh-cn_3.11.0_all.ipk
 
-    - name: 下载最新passwall包
+    - name: 下载最新 Passwall 所有 .ipk 到 ./packages
       run: |
         cd immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64
+        mkdir -p ./packages
         
-        BASE_PACKAGES="https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-24.10/x86_64/passwall_packages"
-        BASE_LUCI="https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-24.10/x86_64/passwall_luci"
+        wget --mirror --no-parent \
+            -e robots=off \
+            --accept-regex '.*\.ipk$' \
+            --reject-regex 'index\.html.*' \
+            https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-24.10/x86_64/passwall_packages/ \
+            -P ./packages/tmp_passwall || true
         
-        # 第一部分：拉取 passwall_packages 下的所有 .ipk（用通配符匹配常见模式）
-        for pkg_pattern in \
-          "xray-core_*_x86_64.ipk" \
-          "xray-plugin_*_x86_64.ipk" \
-          "v2ray-plugin_*_x86_64.ipk" \
-          "sing-box_*_x86_64.ipk" \
-          "hysteria_*_x86_64.ipk" \
-          "naiveproxy_*_x86_64.ipk" \
-          "trojan-plus_*_x86_64.ipk" \
-          "tuic-client_*_x86_64.ipk" \
-          "ipt2socks_*_x86_64.ipk" \
-          "microsocks_*_x86_64.ipk" \
-          "tcping_*_x86_64.ipk" \
-          "geoview_*_x86_64.ipk" \
-          "chinadns-ng_*_x86_64.ipk" \
-          "dns2socks_*_x86_64.ipk" \
-          "shadowsocks-libev-ss-*_*_x86_64.ipk" \
-          "shadowsocksr-libev-ssr-*_*_x86_64.ipk" \
-          "simple-obfs-*_*_x86_64.ipk" \
-          "v2ray-geoip_*_all.ipk" \
-          "v2ray-geosite_*_all.ipk"; do
-          wget -q --show-progress -P ./packages "$BASE_PACKAGES/$pkg_pattern" || true
-        done
+        wget --mirror --no-parent \
+            -e robots=off \
+            --accept-regex '.*\.ipk$' \
+            --reject-regex 'index\.html.*' \
+            https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-24.10/x86_64/passwall_luci/ \
+            -P ./packages/tmp_luci || true
         
-        # 第二部分：拉取 passwall_luci 下的最新 .ipk（目前只有两个，通配符覆盖版本更新）
-        for luci_pattern in \
-          "luci-app-passwall_*_all.ipk" \
-          "luci-i18n-passwall-zh-cn_*_all.ipk"; do
-          wget -q --show-progress -P ./packages "$BASE_LUCI/$luci_pattern" || true
-        done
+        # 移动文件并清理
+        find ./packages/tmp_* -type f -name '*.ipk' -exec mv {} ./packages/ \; 2>/dev/null || true
+        rm -rf ./packages/tmp_* ./packages/*.html* ./packages/robots.txt 2>/dev/null || true
+        
+        echo "已下载的 Passwall 包："
+        #ls -lh ./packages/*.ipk 2>/dev/null || echo "无 ipk 文件"
         
     - name: 编译
       id: compile
       run: |
         cd immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64
-        make image PACKAGES="qemu-ga pppoe-discovery bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview luci-app-mosdns luci-i18n-mosdns-zh-cn luci-app-lucky luci-i18n-lucky-zh-cn luci-i18n-uhttpd-zh-cn luci-i18n-rtp2httpd-zh-cn luci-i18n-pbr-zh-cn"
+        make image -j$(nproc) V=s PACKAGES="qemu-ga pppoe-discovery bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview luci-app-mosdns luci-i18n-mosdns-zh-cn luci-app-lucky luci-i18n-lucky-zh-cn luci-i18n-uhttpd-zh-cn luci-i18n-rtp2httpd-zh-cn luci-i18n-pbr-zh-cn"
         echo "FILE_DATE=$(date +"%Y%m%d-%H%M")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
