@@ -77,24 +77,57 @@ jobs:
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-app-lucky_2.2.2-r1_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/lucky_2.19.5_Openwrt_x86_64.ipk
-        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-app-wechatpush_3.6.10_all.ipk
-        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.10/luci-i18n-wechatpush-zh-cn_git-25.089.39732-ed90c03_all.ipk
-        #wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.17-1/luci-app-passwall_26.1.17-r1_all.ipk
-        #wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.17-1/luci-i18n-passwall-zh-cn_26.1.17_all.ipk
-        #wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.17-1/passwall_packages_ipk_x86_64.zip
-        #unzip ./packages/passwall_packages_ipk_x86_64.zip -d ./packages/
+        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.12/luci-app-wechatpush_3.6.12_all.ipk
+        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.12/luci-i18n-wechatpush-zh-cn_git-26.062.45206-f0af3d3_all.ipk
         wget -P ./packages https://github.com/sbwml/luci-app-mosdns/releases/download/v5.3.3-r5/openwrt-24.10-x86_64.tar.gz
         tar --strip-components=1 -xzf ./packages/openwrt-24.10-x86_64.tar.gz -C ./packages/
-        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/rtp2httpd_3.6.2-r1_x86_64.ipk
-        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/luci-app-rtp2httpd_3.6.2-r1_all.ipk
-        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.6.2/luci-i18n-rtp2httpd-zh-cn_3.6.2_all.ipk
+        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.11.0/rtp2httpd_3.11.0-r1_x86_64.ipk
+        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.11.0/luci-app-rtp2httpd_3.11.0-r1_all.ipk
+        wget -P ./packages https://github.com/stackia/rtp2httpd/releases/download/v3.11.0/luci-i18n-rtp2httpd-zh-cn_3.11.0_all.ipk
 
+    - name: 下载最新passwall包
+      run: |
+        cd immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64
+        
+        BASE_PACKAGES="https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-24.10/x86_64/passwall_packages"
+        BASE_LUCI="https://master.dl.sourceforge.net/project/openwrt-passwall-build/releases/packages-24.10/x86_64/passwall_luci"
+        
+        # 第一部分：拉取 passwall_packages 下的所有 .ipk（用通配符匹配常见模式）
+        for pkg_pattern in \
+          "xray-core_*_x86_64.ipk" \
+          "xray-plugin_*_x86_64.ipk" \
+          "v2ray-plugin_*_x86_64.ipk" \
+          "sing-box_*_x86_64.ipk" \
+          "hysteria_*_x86_64.ipk" \
+          "naiveproxy_*_x86_64.ipk" \
+          "trojan-plus_*_x86_64.ipk" \
+          "tuic-client_*_x86_64.ipk" \
+          "ipt2socks_*_x86_64.ipk" \
+          "microsocks_*_x86_64.ipk" \
+          "tcping_*_x86_64.ipk" \
+          "geoview_*_x86_64.ipk" \
+          "chinadns-ng_*_x86_64.ipk" \
+          "dns2socks_*_x86_64.ipk" \
+          "shadowsocks-libev-ss-*_*_x86_64.ipk" \
+          "shadowsocksr-libev-ssr-*_*_x86_64.ipk" \
+          "simple-obfs-*_*_x86_64.ipk" \
+          "v2ray-geoip_*_all.ipk" \
+          "v2ray-geosite_*_all.ipk"; do
+          wget -q --show-progress -P ./packages "$BASE_PACKAGES/$pkg_pattern" || true
+        done
+        
+        # 第二部分：拉取 passwall_luci 下的最新 .ipk（目前只有两个，通配符覆盖版本更新）
+        for luci_pattern in \
+          "luci-app-passwall_*_all.ipk" \
+          "luci-i18n-passwall-zh-cn_*_all.ipk"; do
+          wget -q --show-progress -P ./packages "$BASE_LUCI/$luci_pattern" || true
+        done
         
     - name: 编译
       id: compile
       run: |
         cd immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64
-        make image PACKAGES="qemu-ga pppoe-discovery bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview luci-app-mosdns luci-i18n-mosdns-zh-cn luci-app-lucky luci-i18n-lucky-zh-cn luci-i18n-uhttpd-zh-cn luci-i18n-rtp2httpd-zh-cn"
+        make image PACKAGES="qemu-ga pppoe-discovery bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview luci-app-mosdns luci-i18n-mosdns-zh-cn luci-app-lucky luci-i18n-lucky-zh-cn luci-i18n-uhttpd-zh-cn luci-i18n-rtp2httpd-zh-cn luci-i18n-pbr-zh-cn"
         echo "FILE_DATE=$(date +"%Y%m%d-%H%M")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 

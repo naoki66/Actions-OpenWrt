@@ -20,6 +20,10 @@ env:
   # ───── 上传/发布选项 ─────
   UPLOAD_FIRMWARE: 'true'
   UPLOAD_RELEASE: 'true'
+  # 定义要查询的更新分支名（可根据需要修改）
+  TARGET_BRANCH: "openwrt-24.10"
+  # 定义获取更新7天前的ISO格式时间（核心时间筛选参数）
+  SINCE_DATE: $(date -d '-7 days' --iso-8601=s)
 
   # ───── 构建参数 ─────
   TZ: Asia/Shanghai
@@ -117,14 +121,16 @@ jobs:
       run: |
         echo "CHANGELOG_CONTENT<<EOF" > changelog_env.txt
         echo "-  🔧 [immortalwrt_主仓库](https://github.com/immortalwrt/immortalwrt)" >> changelog_env.txt
-        curl -s "https://api.github.com/repos/immortalwrt/immortalwrt/commits?since=$(date -d '-7 days' --iso-8601=s)" \
-          | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
+        # 同时携带 sha（分支）和 since（时间）两个参数
+        curl -s "https://api.github.com/repos/immortalwrt/immortalwrt/commits?sha=${TARGET_BRANCH}&since=${SINCE_DATE}" \  | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
+
         echo "-  📦 [immortalwrt_packages](https://github.com/immortalwrt/packages)" >> changelog_env.txt
-        curl -s "https://api.github.com/repos/immortalwrt/packages/commits?since=$(date -d '-7 days' --iso-8601=s)" \
-          | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
+        curl -s "https://api.github.com/repos/immortalwrt/packages/commits?sha=${TARGET_BRANCH}&since=${SINCE_DATE}" \  | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
+    
         echo "-  🖥️ [immortalwrt_luci](https://github.com/immortalwrt/luci)" >> changelog_env.txt
-        curl -s "https://api.github.com/repos/immortalwrt/luci/commits?since=$(date -d '-7 days' --iso-8601=s)" \
-          | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
+        curl -s "https://api.github.com/repos/immortalwrt/luci/commits?sha=${TARGET_BRANCH}&since=${SINCE_DATE}" \   | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
+   
+        
         echo "EOF" >> changelog_env.txt
         cat changelog_env.txt >> $GITHUB_ENV
 
