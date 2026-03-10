@@ -71,8 +71,7 @@ jobs:
         cd immortalwrt-imagebuilder-21.02.7-x86-64.Linux-x86_64
         wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.16.0/ddns-go_6.16.0-r1_x86_64.ipk
         wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.16.0/luci-app-ddns-go_1.6.6-r20260228_all.ipk
-        wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.16.0/luci-i18n-ddns-go-zh-cn_26.059.12415.224c586_all.ipk     
-        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.12/luci-app-wechatpush_3.6.12_all.ipk
+        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v2.06.2/luci-app-serverchan_2.06.2_all.ipk
         wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.12/luci-i18n-wechatpush-zh-cn_git-26.062.45206-f0af3d3_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-app-lucky_2.2.2-r1_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
