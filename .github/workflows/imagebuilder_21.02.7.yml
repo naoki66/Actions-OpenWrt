@@ -69,17 +69,13 @@ jobs:
     - name: 添加非官方包
       run: |
         cd immortalwrt-imagebuilder-21.02.7-x86-64.Linux-x86_64
-        wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.16.0/ddns-go_6.16.0-r1_x86_64.ipk
-        wget -P ./packages https://github.com/sirpdboy/luci-app-ddns-go/releases/download/v6.16.0/luci-app-ddns-go_1.6.6-r20260228_all.ipk
-        wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v2.06.2/luci-app-serverchan_2.06.2_all.ipk
-        #wget -P ./packages https://github.com/tty228/luci-app-wechatpush/releases/download/v3.6.12/luci-i18n-wechatpush-zh-cn_git-26.062.45206-f0af3d3_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.14.0/lucky_2.14.0_Openwrt_x86_64_wanji.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.14.0/luci-app-lucky_2.1.1-1_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.14.0/luci-i18n-lucky-zh-cn_2.1.1-1_all.ipk
-        #wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.3.6-1/22.03-_luci-app-passwall_26.3.6_all.ipk
-        #wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.3.6-1/22.03-_luci-i18n-passwall-zh-cn_26.3.6_all.ipk
-        #wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.13-1/passwall_packages_ipk_x86_64.zip
-        #unzip ./packages/passwall_packages_ipk_x86_64.zip -d ./packages/
+        wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.3.6-1/22.03-_luci-app-passwall_26.3.6_all.ipk
+        wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.3.6-1/22.03-_luci-i18n-passwall-zh-cn_26.3.6_all.ipk
+        wget -P ./packages https://github.com/Openwrt-Passwall/openwrt-passwall/releases/download/26.1.13-1/passwall_packages_ipk_x86_64.zip
+        unzip ./packages/passwall_packages_ipk_x86_64.zip -d ./packages/
  
         
     - name: 编译
