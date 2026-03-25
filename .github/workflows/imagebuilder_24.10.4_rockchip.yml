@@ -14,7 +14,10 @@ env:
 jobs:
   build:
     runs-on: ubuntu-22.04
-
+    permissions:
+      contents: write   # 允许推送构建产物到仓库
+      actions: write    # 允许触发其他工作流
+            
     steps:
 
     - name: 删除文件
