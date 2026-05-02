@@ -1,4 +1,4 @@
-name: imagebuilder编译24.10.5
+name: imagebuilder编译24.10.6
 on: 
   workflow_dispatch:
   repository_dispatch:
@@ -50,13 +50,13 @@ jobs:
 
     - name: 下载 ImmortalWrt ImageBuilder（多镜像 fallback）
       run: |
-        IMG_NAME="immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64.tar.zst"
+        IMG_NAME="immortalwrt-imagebuilder-24.10.6-x86-64.Linux-x86_64.tar.zst"
         
         # 多镜像列表，按优先级排序（nju 最快 → 官方 → sjtu）
         URLS=(
-          "https://mirror.nju.edu.cn/immortalwrt/releases/24.10.5/targets/x86/64/$IMG_NAME"
-          "https://downloads.immortalwrt.org/releases/24.10.5/targets/x86/64/$IMG_NAME"
-          "https://mirror.sjtu.edu.cn/immortalwrt/releases/24.10.5/targets/x86/64/$IMG_NAME"
+          "https://mirror.nju.edu.cn/immortalwrt/releases/24.10.6/targets/x86/64/$IMG_NAME"
+          "https://downloads.immortalwrt.org/releases/24.10.6/targets/x86/64/$IMG_NAME"
+          "https://mirror.sjtu.edu.cn/immortalwrt/releases/24.10.6/targets/x86/64/$IMG_NAME"
         )
         
         DOWNLOADED=false
@@ -86,7 +86,7 @@ jobs:
 
     - name: 修改配置和编译文件
       run: |
-        cd immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64
+        cd immortalwrt-imagebuilder-24.10.6-x86-64.Linux-x86_64
         sed -i 's/CONFIG_TARGET_ROOTFS_EXT4FS=y/#CONFIG_TARGET_ROOTFS_EXT4FS is not set/' .config
         sed -i 's/CONFIG_TARGET_EXT4_RESERVED_PCT=0/#CONFIG_TARGET_EXT4_RESERVED_PCT=0 is not set/' .config
         sed -i 's/CONFIG_TARGET_EXT4_BLOCKSIZE_4K=y/#CONFIG_TARGET_EXT4_BLOCKSIZE_4K is not set/' .config
@@ -103,7 +103,7 @@ jobs:
 
     - name: 添加非官方包
       run: |
-        cd immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64
+        cd immortalwrt-imagebuilder-24.10.6-x86-64.Linux-x86_64
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-app-lucky_2.2.2-r1_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/luci-i18n-lucky-zh-cn_25.051.13443.e78d498_all.ipk
         wget -P ./packages https://github.com/gdy666/luci-app-lucky/releases/download/v2.19.5/lucky_2.19.5_Openwrt_x86_64.ipk
@@ -117,7 +117,7 @@ jobs:
 
     - name: 下载 Passwall 包（passwall_packages + passwall_luci）
       run: |
-        cd immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64
+        cd immortalwrt-imagebuilder-24.10.6-x86-64.Linux-x86_64
         mkdir -p ./packages
         
         # 使用 downloads.sourceforge.net 作为主源（更稳定）
@@ -166,7 +166,7 @@ jobs:
     - name: 编译
       id: compile
       run: |
-        cd immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64
+        cd immortalwrt-imagebuilder-24.10.6-x86-64.Linux-x86_64
         make image -j$(nproc) V=s PACKAGES="qemu-ga pppoe-discovery bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview luci-app-mosdns luci-i18n-mosdns-zh-cn luci-app-lucky luci-i18n-lucky-zh-cn luci-i18n-uhttpd-zh-cn luci-i18n-rtp2httpd-zh-cn luci-i18n-pbr-zh-cn"
         echo "FILE_DATE=$(date +"%Y%m%d-%H%M")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
@@ -174,7 +174,7 @@ jobs:
     - name: 整理文件
       id: organize
       run: |
-        cd immortalwrt-imagebuilder-24.10.5-x86-64.Linux-x86_64/bin/targets/*/*
+        cd immortalwrt-imagebuilder-24.10.6-x86-64.Linux-x86_64/bin/targets/*/*
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
@@ -182,17 +182,17 @@ jobs:
       uses: actions/upload-artifact@v4
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
-        name: imagebuilder-24.10.5-x64-${{ env.FILE_DATE }}
+        name: imagebuilder-24.10.6-x64-${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}
         
     - name: 创建 release 标签
       id: tag
       run: |
-        echo "release_tag=${{ env.FILE_DATE }}-imagebuilder24.10.5-x64" >> $GITHUB_OUTPUT
+        echo "release_tag=${{ env.FILE_DATE }}-imagebuilder24.10.6-x64" >> $GITHUB_OUTPUT
         touch release.txt
         echo " ⏏️ imagebuilder编译信息" >> release.txt
-        echo "Immortalwrt-24.10.5-x64" >> release.txt
-        echo "🔗https://downloads.immortalwrt.org/releases/24.10.5/targets/x86/64/" >> release.txt
+        echo "Immortalwrt-24.10.6-x64" >> release.txt
+        echo "🔗https://downloads.immortalwrt.org/releases/24.10.6/targets/x86/64/" >> release.txt
         echo "⏰编译完成时间：$(date "+%Y年%m月%d日%H时%M分")" >> release.txt
         echo "TIME2=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV        
         echo "status=success" >> $GITHUB_OUTPUT
@@ -228,4 +228,4 @@ jobs:
                
     - name: Pushplus推送通知
       if: steps.tag.outputs.status == 'success' && !cancelled()
-      run: curl http://www.pushplus.plus/send -X POST -H "Content-Type:application/json" -d '{"title":"imagebuilder编译immortalwrt-24.10.5-64成功！","content":" 从${{ env.TIME1 }}开始到${{ env.TIME2 }}编译完成！","token":"${{ secrets.PUSHPLUS_TOKEN }}","webhook":"02","channel":"cp"}'
+      run: curl http://www.pushplus.plus/send -X POST -H "Content-Type:application/json" -d '{"title":"imagebuilder编译immortalwrt-24.10.6-64成功！","content":" 从${{ env.TIME1 }}开始到${{ env.TIME2 }}编译完成！","token":"${{ secrets.PUSHPLUS_TOKEN }}","webhook":"02","channel":"cp"}'
