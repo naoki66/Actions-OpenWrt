@@ -72,6 +72,35 @@ make V=s -j$(nproc)
 | build_ImmortalWrt_25.12 | ImmortalWrt 25.12 版本构建 |
 | build_lede-X64 | LEDE X64 架构构建 |
 
+## 🌐 DNS 协议配置
+
+### 国内 DNS
+
+| 服务商 | IPv4 | DoH | DoT |
+|--------|------|-----|-----|
+| 阿里 | 223.5.5.5 / 223.6.6.6 | https://dns.alidns.com/dns-query | tls://dns.alidns.com |
+| 腾讯 | 119.29.29.29 | https://doh.pub/dns-query | tls://dot.pub |
+| 360 | 101.226.4.6 | https://doh.360.cn | tls://dot.360.cn |
+| 百度 | 180.76.76.76 | - | - |
+
+### 国外 DNS
+
+| 服务商 | IPv4 | DoH | DoT |
+|--------|------|-----|-----|
+| Google | 8.8.8.8 / 8.8.4.4 | https://dns.google/dns-query | tls://dns.google |
+| Cloudflare | 1.1.1.1 / 1.0.0.1 | https://cloudflare-dns.com/dns-query | tls://1dot1dot1dot1.cloudflare-dns.com |
+| Quad9 | 9.9.9.9 | https://dns.quad9.net/dns-query | tls://dns.quad9.net |
+| AdGuard | 94.140.14.14 | https://dns.adguard.com/dns-query | tls://dns.adguard-dns.com |
+| NextDNS | - | https://dns.nextdns.io | - |
+| DNS.SB | 185.222.222.222 | https://doh.sb/dns-query | tls://dot.sb |
+
+### DNS-over-QUIC
+
+| 服务商 | 地址 |
+|--------|------|
+| AdGuard | quic://dns.adguard-dns.com |
+| NextDNS | quic://dns.nextdns.io |
+
 ## 🙏 致谢
 
 - [P3TERX](https://github.com/P3TERX/Actions-OpenWrt) - Actions-OpenWrt 原始项目
