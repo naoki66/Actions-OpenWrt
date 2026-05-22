@@ -13,9 +13,9 @@ env:
   # ───── 源码与脚本 ─────
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
-  CONFIG_FILE: lede-x64.config
-  DIY_P1_SH: lede-diy-part1.sh
-  DIY_P2_SH: lede-diy-part2.sh
+  CONFIG_FILE: config/lede/lede-x64.config
+  DIY_P1_SH: scripts/lede/lede-diy-part1.sh
+  DIY_P2_SH: scripts/lede/lede-diy-part2.sh
 
   # ───── 上传/发布选项 ─────
   UPLOAD_FIRMWARE: 'true'
@@ -102,10 +102,10 @@ jobs:
         ./scripts/feeds install -a -f
 
 
-    # 6️⃣ 自定义配置config，DIY_P2_SH
+    # 7️⃣ 自定义配置config，DIY_P2_SH
     - name: 自定义配置config，DIY_P2_SH
       run: |
-        [ -e "Lede_Files" ] && mv Lede_Files lede/files
+        [ -e "files/lede" ] && mv files/lede lede/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE lede/.config
         chmod +x $DIY_P2_SH
         cd lede

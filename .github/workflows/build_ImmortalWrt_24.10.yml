@@ -13,9 +13,9 @@ env:
   # ───── 源码与脚本 ─────
   REPO_URL: https://github.com/immortalwrt/immortalwrt
   REPO_BRANCH: openwrt-24.10
-  CONFIG_FILE: ImmortalWrt-24.10-x64.config
-  DIY_P1_SH: ImmortalWrt-diy-part1.sh
-  DIY_P2_SH: ImmortalWrt-diy-part2.sh
+  CONFIG_FILE: config/immortalwrt/ImmortalWrt-24.10-x64.config
+  DIY_P1_SH: scripts/immortalwrt/ImmortalWrt-diy-part1.sh
+  DIY_P2_SH: scripts/immortalwrt/ImmortalWrt-diy-part2.sh
 
   # ───── 上传/发布选项 ─────
   UPLOAD_FIRMWARE: 'true'
@@ -109,7 +109,7 @@ jobs:
     # 7️⃣ 自定义配置config，DIY_P2_SH
     - name: 自定义配置config，DIY_P2_SH
       run: |
-        [ -e "ImmortalWrt_Files" ] && mv ImmortalWrt_Files immortalwrt/files
+        [ -e "files/immortalwrt" ] && mv files/immortalwrt immortalwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE immortalwrt/.config
         chmod +x $DIY_P2_SH
         cd immortalwrt
