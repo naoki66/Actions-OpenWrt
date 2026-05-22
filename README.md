@@ -35,6 +35,98 @@ Actions-OpenWrt/
 └── docs/                       # 项目文档
 ```
 
+## ⚙️ 工作流说明
+
+### 源码编译工作流
+
+| 工作流 | 说明 | 触发方式 |
+|--------|------|----------|
+| build_ImmortalWrt_24.10 | ImmortalWrt 24.10 源码编译 | 手动/定时/上游更新 |
+| build_ImmortalWrt_25.12 | ImmortalWrt 25.12 源码编译 | 手动/定时/上游更新 |
+| build_lede-X64 | LEDE X64 架构源码编译 | 手动/定时/上游更新 |
+
+### ImageBuilder 工作流
+
+| 工作流 | 说明 | 触发方式 |
+|--------|------|----------|
+| imagebuilder_21.02.7 | ImmortalWrt 21.02.7 ImageBuilder | 手动/定时 |
+| imagebuilder_23.05.7 | ImmortalWrt 23.05.7 ImageBuilder | 手动/定时 |
+| imagebuilder_24.10.6 | ImmortalWrt 24.10.6 ImageBuilder | 手动/定时 |
+| imagebuilder_24.10.4_rockchip | ImmortalWrt 24.10.4 Rockchip ARM64 | 手动/定时 |
+| imagebuilder_25.12-SNAPSHOT | ImmortalWrt 25.12 SNAPSHOT ImageBuilder | 手动/定时 |
+
+### 更新检测工作流
+
+| 工作流 | 说明 | 触发方式 |
+|--------|------|----------|
+| update-checker | 检测上游源码更新 | 每天定时 |
+| update-tag-checker | 检测标签更新 | 每天定时 |
+
+## 🏗️ ImageBuilder 编译模式
+
+ImageBuilder 是一种轻量级的固件构建方式，通过预编译的基础镜像配合自定义软件包实现快速固件构建。
+
+### ImageBuilder vs 源码编译
+
+| 对比项 | ImageBuilder | 源码编译 |
+|--------|--------------|----------|
+| 编译速度 | 10-30 分钟 | 1-6 小时 |
+| 灵活性 | 仅添加/删除软件包 | 可深度定制内核/配置 |
+| 适用场景 | 快速迭代、版本测试 | 深度定制、特定需求 |
+| 系统要求 | 较低 | 较高 |
+
+### 内置软件包
+
+ImageBuilder 工作流默认集成以下软件包：
+
+**基础包**
+- luci-app-openclash - OpenClash 客户端
+- luci-app-ddns-go - DDNS-GO 动态域名
+- luci-app-wechatpush - 微信推送通知
+- luci-app-passwall - PassWall 代理
+- luci-app-mosdns - DNS 优化
+- luci-app-lucky - 幸运抽奖插件
+- luci-proto-wireguard - WireGuard 协议
+- luci-app-ttyd - 网页终端
+- luci-app-attendedsysupgrade - 在线升级
+- luci-app-dashboard - 仪表盘
+
+**网络工具**
+- xray-core / homeproxy - 代理核心
+- ddns-scripts-dnspod - DNSPod DDNS
+- ddns-scripts-cloudflare - Cloudflare DDNS
+- kmod-nft-socket - NFT socket 扩展
+
+**中文语言包**
+- luci-i18n-base-zh-cn
+- luci-i18n-firewall-zh-cn
+- luci-i18n-ddns-zh-cn
+- luci-i18n-package-manager-zh-cn
+- luci-i18n-smartdns-zh-cn
+
+### 默认配置修改
+
+所有 ImageBuilder 工作流统一应用以下配置：
+
+```bash
+# 禁用不常用的镜像格式
+CONFIG_TARGET_ROOTFS_EXT4FS=n
+CONFIG_TARGET_EXT4_RESERVED_PCT=0
+CONFIG_TARGET_EXT4_BLOCKSIZE_4K=n
+CONFIG_TARGET_ISO_IMAGES=n
+CONFIG_TARGET_QCOW2_IMAGES=n
+CONFIG_TARGET_VDI_IMAGES=n
+CONFIG_TARGET_VMDK_IMAGES=n
+CONFIG_TARGET_VHDX_IMAGES=n
+
+# 修改根分区大小
+CONFIG_TARGET_ROOTFS_PARTSIZE=512
+
+# 修改默认 LAN IP
+CONFIG_TARGET_PREINIT_IP="192.168.50.1"
+CONFIG_TARGET_PREINIT_BROADCAST="192.168.50.255"
+```
+
 ## 🚀 使用方法
 
 ### 快速开始
@@ -64,13 +156,17 @@ make defconfig && make download -j8
 make V=s -j$(nproc)
 ```
 
-## ⚙️ 工作流说明
+### ImageBuilder 本地使用
 
-| 工作流 | 说明 |
-|--------|------|
-| build_ImmortalWrt_24.10 | ImmortalWrt 24.10 版本构建 |
-| build_ImmortalWrt_25.12 | ImmortalWrt 25.12 版本构建 |
-| build_lede-X64 | LEDE X64 架构构建 |
+```bash
+# 下载 ImageBuilder
+wget https://downloads.immortalwrt.org/releases/24.10.6/targets/x86/64/immortalwrt-imagebuilder-24.10.6-x86-64.Linux-x86_64.tar.zst
+tar -I zstd -xf immortalwrt-imagebuilder-24.10.6-x86-64.Linux-x86_64.tar.zst
+cd immortalwrt-imagebuilder-24.10.6-x86-64.Linux-x86_64
+
+# 编译固件
+make image PACKAGES="luci luci-app-openclash luci-i18n-base-zh-cn"
+```
 
 ## 🌐 DNS 协议配置
 

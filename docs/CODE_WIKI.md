@@ -58,21 +58,33 @@ Actions-OpenWrt/
 │       ├── build_ImmortalWrt_24.10.yml
 │       ├── build_ImmortalWrt_25.12.yml
 │       ├── build_lede-X64.yml
-│       ├── imagebuilder_*.yml          # ImageBuilder 构建配置
-│       ├── update-checker.yml          # 更新检测工作流
-│       └── update-tag-checker.yml      # 标签更新检测
-├── Lede_Files/
-│   └── etc/config/google_fu_mode       # LEDE 自定义配置文件
-├── ImmortalWrt-diy-part1.sh            # ImmortalWrt 第一阶段DIY
-├── ImmortalWrt-diy-part2.sh            # ImmortalWrt 第二阶段DIY
-├── ImmortalWrt25-diy-part1.sh          # ImmortalWrt 25.x DIY
-├── ImmortalWrt25-diy-part2.sh
-├── lede-diy-part1.sh                   # LEDE 第一阶段DIY
-├── lede-diy-part2.sh                   # LEDE 第二阶段DIY
-├── lede-iptv.sh                        # LEDE IPTV 配置脚本
-├── depends-ubuntu                      # Ubuntu 依赖说明
-├── *.config                            # OpenWrt 配置文件
-└── README.md                           # 项目说明
+│       ├── imagebuilder_*.yml              # ImageBuilder 构建配置
+│       ├── update-checker.yml              # 更新检测工作流
+│       └── update-tag-checker.yml          # 标签更新检测
+├── config/
+│   ├── immortalwrt/                         # ImmortalWrt 配置文件
+│   │   ├── ImmortalWrt-24.10-x64.config
+│   │   ├── ImmortalWrt-25.12-x64.config
+│   │   └── ImmortalWrt_RFastRhino_R68S.config
+│   └── lede/                               # LEDE 配置文件
+│       ├── lede-x64.config
+│       └── lede-R68S.config
+├── scripts/
+│   ├── immortalwrt/                        # ImmortalWrt DIY 脚本
+│   │   ├── ImmortalWrt-diy-part1.sh
+│   │   ├── ImmortalWrt-diy-part2.sh
+│   │   ├── ImmortalWrt25-diy-part1.sh
+│   │   └── ImmortalWrt25-diy-part2.sh
+│   └── lede/                               # LEDE DIY 脚本
+│       ├── lede-diy-part1.sh
+│       ├── lede-diy-part2.sh
+│       └── lede-iptv.sh
+├── files/
+│   └── lede/etc/config/google_fu_mode      # 自定义配置文件
+├── docs/
+│   ├── CODE_WIKI.md                        # 项目开发文档
+│   └── depends-ubuntu                       # Ubuntu 依赖说明
+└── README.md                               # 项目说明
 ```
 
 ### 2.3 模块职责划分
