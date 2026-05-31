@@ -53,7 +53,7 @@ Actions-OpenWrt/
 | imagebuilder_23.05.7 | ImmortalWrt 23.05.7 ImageBuilder | 手动/定时 |
 | imagebuilder_24.10.6 | ImmortalWrt 24.10.6 ImageBuilder | 手动/定时 |
 | imagebuilder_24.10.4_rockchip | ImmortalWrt 24.10.4 Rockchip ARM64 | 手动/定时 |
-| imagebuilder_25.12-SNAPSHOT | ImmortalWrt 25.12 SNAPSHOT ImageBuilder | 手动/定时 |
+| imagebuilder_25.12.0 | ImmortalWrt 25.12.0 ImageBuilder | 手动/定时 |
 
 ### 更新检测工作流
 

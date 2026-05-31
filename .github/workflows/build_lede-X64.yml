@@ -31,6 +31,7 @@ jobs:
   build-firmware:
     name: 构建固件
     runs-on: ubuntu-22.04
+    timeout-minutes: 360
     concurrency:
       group: lede-x64-${{ github.ref }}  # 按分支隔离并发
       cancel-in-progress: true             # 取消旧任务，执行最新任务
@@ -192,7 +193,7 @@ jobs:
       if: env.UPLOAD_RELEASE == 'true'
       uses: softprops/action-gh-release@v2
       env:
-        GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ env.RELEASE_TAG }}-LEDE-X64
         name: ${{ env.RELEASE_TAG }}-LEDE-X64
@@ -208,7 +209,7 @@ jobs:
     - name: 清理旧 Workflow 记录
       uses: Mattraks/delete-workflow-runs@v2
       with:
-        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         retain_days: 3
         keep_minimum_runs: 3
 
@@ -216,7 +217,7 @@ jobs:
     - name: 清理旧 Release
       if: env.UPLOAD_RELEASE == 'true' 
       env:
-          GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       uses: dev-drprasad/delete-older-releases@v0.3.4
       with:
           keep_latest: 12

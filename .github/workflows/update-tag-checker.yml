@@ -8,21 +8,31 @@ on:
 jobs:
   check-and-dispatch:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: update-tag-checker
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      actions: write
 
     steps:
       - name: 💡 设置缓存 key 和路径
         id: vars
         run: |
           echo "cache_path=.tag_cache" >> "$GITHUB_OUTPUT"
-          echo "cache_key=tag-cache" >> "$GITHUB_OUTPUT"
+          echo "restore_key=tag-cache-" >> "$GITHUB_OUTPUT"
+          echo "restore_probe_key=tag-cache-restore-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
 
       - name: 💾 恢复缓存的标签
         id: cache-restore
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ steps.vars.outputs.cache_path }}
-          key: ${{ steps.vars.outputs.cache_key }}
-          restore-keys: ${{ steps.vars.outputs.cache_key }}
+          key: ${{ steps.vars.outputs.restore_probe_key }}
+          restore-keys: |
+            ${{ steps.vars.outputs.restore_key }}
+            tag-cache
 
       - name: 📄 读取上次保存的标签
         id: read_tag
@@ -40,13 +50,15 @@ jobs:
       - name: 🔍 获取 ImmortalWrt 最新标签
         id: get_tag
         run: |
-          latest_tag=$(curl -s https://api.github.com/repos/immortalwrt/immortalwrt/tags | jq -r '.[0].name')
+          latest_tag=$(curl -fsSL https://api.github.com/repos/immortalwrt/immortalwrt/tags | jq -r '.[0].name // empty')
           if [ -z "$latest_tag" ]; then
             echo "获取最新标签失败，可能是 GitHub API 限制或仓库不存在"
             exit 1
           fi
+          safe_tag=$(echo "$latest_tag" | sed 's#[/:]#-#g')
           echo "最新标签: $latest_tag"
           echo "latest_tag=$latest_tag" >> "$GITHUB_OUTPUT"
+          echo "cache_key=tag-cache-$safe_tag" >> "$GITHUB_OUTPUT"
 
       - name: 🔁 判断标签是否更新
         id: compare
@@ -64,7 +76,7 @@ jobs:
         if: steps.compare.outputs.trigger == 'true'
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           event-type: Tag_updated
           client-payload: >-
             {
@@ -85,13 +97,13 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ${{ steps.vars.outputs.cache_path }}
-          key: ${{ steps.vars.outputs.cache_key }}
+          key: ${{ steps.get_tag.outputs.cache_key }}
 
   
       - name: 删除旧工作流运行记录
         uses: Mattraks/delete-workflow-runs@v2
         with:
-          token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           retain_days: 3
           keep_minimum_runs: 3
