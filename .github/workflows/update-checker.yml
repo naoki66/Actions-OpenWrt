@@ -8,56 +8,66 @@ on:
 jobs:
   check-repos:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: update-checker-${{ matrix.repo_group.id }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      actions: write
     strategy:
+      fail-fast: false
       matrix:
         repo_group:
-          - id: immortalwrt-group
+          - id: immortalwrt-24-10-group
             repos:
               - id: immortalwrt
                 url: https://github.com/immortalwrt/immortalwrt
-                branch: master
-                event: immortalwrt-update
+                branch: openwrt-24.10
               - id: immortalwrt-packages
                 url: https://github.com/immortalwrt/packages
-                branch: master
-                event: immortalwrt-packages-update
+                branch: openwrt-24.10
               - id: luci-packages
                 url: https://github.com/immortalwrt/luci
-                branch: master
-                event: immortalwrt-luci-update
+                branch: openwrt-24.10
+          - id: immortalwrt-25-12-group
+            repos:
+              - id: immortalwrt
+                url: https://github.com/immortalwrt/immortalwrt
+                branch: openwrt-25.12
+              - id: immortalwrt-packages
+                url: https://github.com/immortalwrt/packages
+                branch: openwrt-25.12
+              - id: luci-packages
+                url: https://github.com/immortalwrt/luci
+                branch: openwrt-25.12
           - id: lede-group
             repos:
               - id: lede
                 url: https://github.com/coolsnowwolf/lede
                 branch: master
-                event: lede-update
               - id: lede-luci
                 url: https://github.com/coolsnowwolf/luci
                 branch: master
-                event: lede-luci-update
               - id: lede-packages
                 url: https://github.com/coolsnowwolf/packages
                 branch: master
-                event: lede-packages-update
 
     steps:
     - name: 设置缓存目录路径
       id: vars
       run: |
-        echo "cache_path=.cache/${{ matrix.repo_group.id }}" >> $GITHUB_OUTPUT
-        # 使用固定的缓存键，不包含 github.run_id
-        echo "cache_key=commit-${{ matrix.repo_group.id }}-latest" >> $GITHUB_OUTPUT
-        # 添加恢复键以支持向后兼容
-        echo "restore_keys=commit-${{ matrix.repo_group.id }}-" >> $GITHUB_OUTPUT
+        echo "cache_path=.cache/${{ matrix.repo_group.id }}" >> "$GITHUB_OUTPUT"
+        echo "restore_key=commit-${{ matrix.repo_group.id }}-" >> "$GITHUB_OUTPUT"
+        echo "restore_probe_key=commit-${{ matrix.repo_group.id }}-restore-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
 
-    # 修改恢复缓存步骤
     - name: 恢复上次缓存的提交哈希
       id: restore-cache
-      uses: actions/cache@v4
+      uses: actions/cache/restore@v4
       with:
         path: ${{ steps.vars.outputs.cache_path }}
-        key: ${{ steps.vars.outputs.cache_key }}
-        restore-keys: ${{ steps.vars.outputs.restore_keys }}
+        key: ${{ steps.vars.outputs.restore_probe_key }}
+        restore-keys: ${{ steps.vars.outputs.restore_key }}
 
     - name: 检查 ${{ matrix.repo_group.id }} 更新
       id: check-update
@@ -69,12 +79,17 @@ jobs:
           REPO_BRANCH=$(echo $repo | jq -r '.branch')
           # 直接获取最新 commit 哈希，避免完整克隆
           LATEST_HASH=$(git ls-remote $REPO_URL $REPO_BRANCH | cut -f1)
+          if [[ -z "$LATEST_HASH" ]]; then
+            echo "::error::无法获取 $REPO_ID 的 $REPO_BRANCH 分支最新提交"
+            exit 1
+          fi
           echo "仓库 $REPO_ID 最新提交: $LATEST_HASH"
           GROUP_HASH="$GROUP_HASH$LATEST_HASH"
         done
         GROUP_HASH=$(echo -n "$GROUP_HASH" | sha256sum | awk '{print $1}')
         echo "组 ${{ matrix.repo_group.id }} 组合哈希: $GROUP_HASH"
         echo "GROUP_HASH=$GROUP_HASH" >> $GITHUB_ENV  # 提供给触发器使用
+        echo "cache_key=commit-${{ matrix.repo_group.id }}-$GROUP_HASH" >> "$GITHUB_OUTPUT"
 
         # 定位缓存文件
         CACHE_FILE="${{ steps.vars.outputs.cache_path }}/last_commit"
@@ -100,7 +115,7 @@ jobs:
       if: steps.check-update.outputs.has_update == 'true'
       uses: peter-evans/repository-dispatch@v2
       with:
-        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         event-type: ${{ matrix.repo_group.id }}-update
         client-payload: >-
           {
@@ -113,13 +128,13 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: ${{ steps.vars.outputs.cache_path }}
-        key: ${{ steps.vars.outputs.cache_key }}
+        key: ${{ steps.check-update.outputs.cache_key }}
 
 
     - name: 删除旧工作流运行记录
       uses: Mattraks/delete-workflow-runs@v2
       with:
-        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         repository: ${{ github.repository }}
         retain_days: 3
         keep_minimum_runs: 3

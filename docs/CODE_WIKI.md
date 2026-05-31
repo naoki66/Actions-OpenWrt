@@ -182,7 +182,7 @@ Actions-OpenWrt/
 
 4. **触发构建**：
    - 通过 `repository_dispatch` 发送事件
-   - 事件类型：`immortalwrt-group-update` 或 `lede-group-update`
+   - 事件类型：`immortalwrt-24-10-group-update`、`immortalwrt-25-12-group-update` 或 `lede-group-update`
 
 ---
 
@@ -338,24 +338,17 @@ python3 python3-pyelftools python3-setuptools
 
 1. **GitHub 账号**：需要拥有 GitHub 账号
 2. **仓库模板**：使用此仓库模板创建自己的仓库
-3. **Access Token**：创建具有 `public_repo` 权限的 Personal Access Token
+3. **Actions 权限**：在仓库 Settings → Actions → General 中允许 workflow 读写仓库内容
 4. **Secrets 配置**：
-   - `ACTIONS_TRIGGER_PAT`: 用于触发工作流和创建 Release
-   - `ServerChan`（可选）: 用于微信推送通知
+   - `PUSHPLUS_TOKEN`（可选）: 用于 Pushplus 推送通知
 
 ### 5.2 配置步骤
 
-1. **创建 Token**：
-   - 进入 GitHub Settings → Developer settings → Personal access tokens
-   - 生成新 token，勾选 `public_repo` 权限
-   - 复制 token 值
-
-2. **配置 Secrets**：
+1. **配置 Secrets**：
    - 进入仓库 Settings → Secrets and variables → Actions
-   - 添加 `ACTIONS_TRIGGER_PAT`，值为上述 token
-   - （可选）添加 `ServerChan`，值为 ServerChan SCKEY
+   - （可选）添加 `PUSHPLUS_TOKEN`，值为 Pushplus token
 
-3. **自定义配置**：
+2. **自定义配置**：
    - 修改 `lede-x64.config` 或对应配置文件
    - 修改 `lede-diy-part1.sh` 添加需要的 feeds
    - 修改 `lede-diy-part2.sh` 调整系统配置
@@ -570,19 +563,19 @@ make V=s -j$(nproc)
 
 #### 问题 3：微信推送失败
 
-**原因**：未配置 `ServerChan` Secret
+**原因**：未配置 `PUSHPLUS_TOKEN` Secret
 
 **解决方案**：
-- 在仓库 Secrets 中添加 `ServerChan`
+- 在仓库 Secrets 中添加 `PUSHPLUS_TOKEN`
 - 或注释掉工作流中的微信推送步骤
 
 #### 问题 4：权限不足
 
-**原因**：Token 权限不够或未配置
+**原因**：仓库 Actions 权限不足
 
 **解决方案**：
-- 确保 `ACTIONS_TRIGGER_PAT` 具有 `public_repo` 权限
-- 检查 Token 是否正确配置
+- 在仓库 Settings → Actions → General 中启用 Read and write permissions
+- 确认工作流内需要发布或清理的 job 已声明 `contents: write` / `actions: write`
 
 ### 8.2 日志查看
 

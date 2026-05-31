@@ -3,7 +3,7 @@ name: "构建immortalwrt-24.10-X64固件"
 on:
   repository_dispatch:
     types: 
-      - immortalwrt-group-update
+      - immortalwrt-24-10-group-update
   workflow_dispatch:
   # 已注释掉定期自动编译，仅在上游更新或手动触发时编译
   # schedule:
@@ -20,10 +20,6 @@ env:
   # ───── 上传/发布选项 ─────
   UPLOAD_FIRMWARE: 'true'
   UPLOAD_RELEASE: 'true'
-  # 定义要查询的更新分支名（可根据需要修改）
-  TARGET_BRANCH: "openwrt-24.10"
-  # 定义获取更新7天前的ISO格式时间（核心时间筛选参数）
-  SINCE_DATE: $(date -d '-7 days' --iso-8601=s)
 
   # ───── 构建参数 ─────
   TZ: Asia/Shanghai
@@ -35,6 +31,7 @@ jobs:
   build-firmware:
     name: 构建固件
     runs-on: ubuntu-22.04
+    timeout-minutes: 360
     concurrency:
       group: immortalwrt-x64-24.10-${{ github.ref }}  # 按分支隔离并发
       cancel-in-progress: true             # 取消旧任务，执行最新任务
@@ -119,16 +116,19 @@ jobs:
     # 8️⃣ 通过API生成上游一周更新日志
     - name: 通过API生成上游一周更新日志
       run: |
+        SINCE_DATE="$(date -d '-7 days' --iso-8601=s)"
         echo "CHANGELOG_CONTENT<<EOF" > changelog_env.txt
         echo "-  🔧 [immortalwrt_主仓库](https://github.com/immortalwrt/immortalwrt)" >> changelog_env.txt
-        # 同时携带 sha（分支）和 since（时间）两个参数
-        curl -s "https://api.github.com/repos/immortalwrt/immortalwrt/commits?sha=${TARGET_BRANCH}&since=${SINCE_DATE}" \  | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
+        curl -fsSL "https://api.github.com/repos/immortalwrt/immortalwrt/commits?sha=${REPO_BRANCH}&since=${SINCE_DATE}" 2>/dev/null \
+          | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt || true
 
         echo "-  📦 [immortalwrt_packages](https://github.com/immortalwrt/packages)" >> changelog_env.txt
-        curl -s "https://api.github.com/repos/immortalwrt/packages/commits?sha=${TARGET_BRANCH}&since=${SINCE_DATE}" \  | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
+        curl -fsSL "https://api.github.com/repos/immortalwrt/packages/commits?sha=${REPO_BRANCH}&since=${SINCE_DATE}" 2>/dev/null \
+          | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt || true
     
         echo "-  🖥️ [immortalwrt_luci](https://github.com/immortalwrt/luci)" >> changelog_env.txt
-        curl -s "https://api.github.com/repos/immortalwrt/luci/commits?sha=${TARGET_BRANCH}&since=${SINCE_DATE}" \   | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt 2>/dev/null || true
+        curl -fsSL "https://api.github.com/repos/immortalwrt/luci/commits?sha=${REPO_BRANCH}&since=${SINCE_DATE}" 2>/dev/null \
+          | jq -r '.[]? | select(.commit != null) | "- [\(.commit.committer.date)] \(.commit.message | split("\n")[0])"' >> changelog_env.txt || true
    
         
         echo "EOF" >> changelog_env.txt
@@ -197,7 +197,7 @@ jobs:
       if: env.UPLOAD_RELEASE == 'true'
       uses: softprops/action-gh-release@v2
       env:
-        GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}      
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
           tag_name: ${{ env.RELEASE_TAG }}-immortalwrt-24.10-X64
           name: ${{ env.RELEASE_TAG }}-immortalwrt-24.10-X64
@@ -213,7 +213,7 @@ jobs:
     - name: 清理旧 Workflow 记录
       uses: Mattraks/delete-workflow-runs@v2
       with:
-        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         retain_days: 3
         keep_minimum_runs: 3
 
@@ -221,7 +221,7 @@ jobs:
     - name: 清理旧 Release
       if: env.UPLOAD_RELEASE == 'true' 
       env:
-          GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       uses: dev-drprasad/delete-older-releases@v0.3.4
       with:
           keep_latest: 12

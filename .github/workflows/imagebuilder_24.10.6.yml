@@ -13,7 +13,12 @@ env:
 
 jobs:
   build:
+    if: github.event_name != 'repository_dispatch' || startsWith(github.event.client_payload.tag, 'v24.10.')
     runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    concurrency:
+      group: imagebuilder-24.10.6-${{ github.ref }}
+      cancel-in-progress: true
     permissions:
       contents: write   # 允许推送构建产物到仓库
       actions: write    # 允许触发其他工作流
@@ -201,7 +206,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
-        GITHUB_TOKEN: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
@@ -210,7 +215,7 @@ jobs:
     - name: 删除运行的工作流
       uses: Mattraks/delete-workflow-runs@v2
       with:
-        token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         retain_days: 5
         keep_minimum_runs: 3
 
@@ -222,10 +227,10 @@ jobs:
         delete_workflows: true
         workflows_keep_day: 7
         delete_tags: true
-        gh_token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
+        gh_token: ${{ secrets.GITHUB_TOKEN }}
 
 
                
     - name: Pushplus推送通知
       if: steps.tag.outputs.status == 'success' && !cancelled()
-      run: curl http://www.pushplus.plus/send -X POST -H "Content-Type:application/json" -d '{"title":"imagebuilder编译immortalwrt-24.10.6-64成功！","content":" 从${{ env.TIME1 }}开始到${{ env.TIME2 }}编译完成！","token":"${{ secrets.PUSHPLUS_TOKEN }}","webhook":"02","channel":"cp"}'
+      run: curl https://www.pushplus.plus/send -X POST -H "Content-Type:application/json" -d '{"title":"imagebuilder编译immortalwrt-24.10.6-64成功！","content":" 从${{ env.TIME1 }}开始到${{ env.TIME2 }}编译完成！","token":"${{ secrets.PUSHPLUS_TOKEN }}","webhook":"02","channel":"cp"}'
