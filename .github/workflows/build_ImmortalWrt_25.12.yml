@@ -206,6 +206,7 @@ jobs:
 
     # 1️⃣5️⃣ 清理旧 Workflow 记录
     - name: 清理旧 Workflow 记录
+      continue-on-error: true
       uses: Mattraks/delete-workflow-runs@v2
       with:
         token: ${{ secrets.GITHUB_TOKEN }}

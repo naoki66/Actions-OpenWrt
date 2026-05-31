@@ -138,6 +138,7 @@ jobs:
         files: ${{ env.FIRMWARE }}/*
         
     - name: 删除运行的工作流
+      continue-on-error: true
       uses: Mattraks/delete-workflow-runs@v2
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
