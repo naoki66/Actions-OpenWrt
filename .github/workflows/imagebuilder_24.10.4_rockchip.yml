@@ -85,7 +85,7 @@ jobs:
       id: compile
       run: |
         cd immortalwrt-imagebuilder-24.10.4-rockchip-armv8.Linux-x86_64
-        make image PACKAGES="pppoe-discovery bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview  luci-app-lucky luci-i18n-lucky-zh-cn luci-i18n-uhttpd-zh-cn"
+        make image PACKAGES="pppoe-discovery bind-host luci-i18n-smartdns-zh-cn luci-i18n-package-manager-zh-cn luci-app-openclash luci-app-ddns-go luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn luci-app-passwall luci-i18n-passwall-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn  luci-i18n-ddns-go-zh-cn luci-i18n-watchcat-zh-cn luci-app-wechatpush luci-i18n-wechatpush-zh-cn luci-i18n-wol-zh-cn luci-i18n-homeproxy-zh-cn luci-proto-wireguard luci-i18n-dashboard-zh-cn luci-i18n-timewol-zh-cn kmod-nft-socket xray-core geoview  luci-app-lucky luci-i18n-lucky-zh-cn luci-i18n-uhttpd-zh-cn"
         echo "FILE_DATE=$(date +"%Y%m%d-%H%M")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
@@ -106,7 +106,7 @@ jobs:
     - name: 创建 release 标签
       id: tag
       run: |
-        echo "release_tag=${{ env.FILE_DATE }}-imagebuilder24.10.4-rockchip" >> $GITHUB_OUTPUT
+        echo "release_tag=imagebuilder24.10.4-rockchip-${{ env.FILE_DATE }}" >> $GITHUB_OUTPUT
         touch release.txt
         echo " ⏏️ imagebuilder编译信息" >> release.txt
         echo "Immortalwrt-24.10.4-rockchip" >> release.txt
@@ -132,15 +132,37 @@ jobs:
         retain_days: 5
         keep_minimum_runs: 3
 
-    - name: 删除旧Releases
-      uses: ophub/delete-releases-workflows@main
-      with:
-        delete_releases: true
-        releases_keep_latest: 12
-        delete_workflows: true
-        workflows_keep_day: 7
-        delete_tags: true
-        gh_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: 删除旧 Releases
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        RELEASE_PREFIX: imagebuilder24.10.4-rockchip-
+        KEEP_LATEST: 12
+      run: |
+        releases=$(curl -fsSL \
+          -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+          -H "Accept: application/vnd.github+json" \
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases?per_page=100")
+
+        echo "$releases" | jq -r --arg prefix "$RELEASE_PREFIX" --argjson keep "$KEEP_LATEST" '
+          map(select(.tag_name | startswith($prefix)))
+          | sort_by(.created_at)
+          | reverse
+          | .[$keep:]
+          | .[]
+          | [.id, .tag_name]
+          | @tsv
+        ' | while IFS=$'\t' read -r release_id tag_name; do
+          [ -z "$release_id" ] && continue
+          echo "Deleting release ${tag_name}"
+          curl -fsSL -X DELETE \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}"
+          curl -fsSL -X DELETE \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/refs/tags/${tag_name}" || true
+        done
 
 
                

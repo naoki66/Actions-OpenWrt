@@ -199,8 +199,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-          tag_name: ${{ env.RELEASE_TAG }}-immortalwrt-24.10-X64
-          name: ${{ env.RELEASE_TAG }}-immortalwrt-24.10-X64
+          tag_name: immortalwrt-24.10-X64-${{ env.RELEASE_TAG }}
+          name: immortalwrt-24.10-X64-${{ env.RELEASE_TAG }}
           body: |
             📦 **编译时间段**  
             ⏰ 从 **${{ env.TIME0 }}** 到 **${{ env.TIME1 }}**  
@@ -217,13 +217,50 @@ jobs:
         retain_days: 3
         keep_minimum_runs: 3
 
-   # 1️⃣6️⃣ 清理旧版本
+    # 1️⃣6️⃣ 清理旧版本
     - name: 清理旧 Release
-      if: env.UPLOAD_RELEASE == 'true' 
+      if: env.UPLOAD_RELEASE == 'true'
       env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      uses: dev-drprasad/delete-older-releases@v0.3.4
-      with:
-          keep_latest: 12
-          delete_tags: true
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        RELEASE_PREFIX: immortalwrt-24.10-X64-
+        KEEP_LATEST: 12
+      run: |
+        releases=$(curl -fsSL \
+          -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+          -H "Accept: application/vnd.github+json" \
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases?per_page=100")
 
+        echo "$releases" | jq -r --arg prefix "$RELEASE_PREFIX" --argjson keep "$KEEP_LATEST" '
+          map(select(.tag_name | startswith($prefix)))
+          | sort_by(.created_at)
+          | reverse
+          | .[$keep:]
+          | .[]
+          | [.id, .tag_name]
+          | @tsv
+        ' | while IFS=$'\t' read -r release_id tag_name; do
+          [ -z "$release_id" ] && continue
+          echo "Deleting release ${tag_name}"
+          curl -fsSL -X DELETE \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}"
+          curl -fsSL -X DELETE \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/refs/tags/${tag_name}" || true
+        done
+
+    - name: 保存上游更新缓存
+      if: github.event_name == 'repository_dispatch' && github.event.client_payload.commit_hash != ''
+      run: |
+        mkdir -p .cache/immortalwrt-24-10-group
+        echo "${{ github.event.client_payload.commit_hash }}" > .cache/immortalwrt-24-10-group/last_commit
+
+    - name: 缓存上游更新哈希
+      if: github.event_name == 'repository_dispatch' && github.event.client_payload.commit_hash != ''
+      continue-on-error: true
+      uses: actions/cache/save@v4
+      with:
+        path: .cache/immortalwrt-24-10-group
+        key: commit-immortalwrt-24-10-group-${{ github.event.client_payload.commit_hash }}

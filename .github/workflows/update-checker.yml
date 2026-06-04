@@ -106,8 +106,7 @@ jobs:
           fi
         fi
 
-        # 有更新
-        echo "$GROUP_HASH" > "$CACHE_FILE"
+        # 有更新，缓存由被触发的构建工作流在成功后写入
         echo "has_update=true" >> "$GITHUB_OUTPUT"
         echo "检测到新提交！"
 
@@ -122,14 +121,6 @@ jobs:
             "group_id": "${{ matrix.repo_group.id }}",
             "commit_hash": "${{ env.GROUP_HASH }}"
           }
-
-    - name: 💾 保存最新 commit 哈希到缓存
-      if: steps.check-update.outputs.has_update == 'true'
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ steps.vars.outputs.cache_path }}
-        key: ${{ steps.check-update.outputs.cache_key }}
-
 
     - name: 删除旧工作流运行记录
       uses: Mattraks/delete-workflow-runs@v2

@@ -1,0 +1,7 @@
+.gitattributes text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+*.config text eol=lf
+*.md text eol=lf
+docs/depends-ubuntu text eol=lf
