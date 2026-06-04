@@ -5,7 +5,7 @@ on:
     types:
       - Tag_updated
   schedule:
-  - cron: "50  3 * * 1"
+    - cron: "0 21 * * 0"  # 北京时间每周一05:00
 
 env:
   TZ: Asia/Shanghai
@@ -38,7 +38,7 @@ jobs:
         free -h
         df -Th
         uname -a
-        echo "TIME1=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV
+        echo "TIME1=$(TZ=${TZ} date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV
 
     - name: 安装依赖文件
       run: |
@@ -92,7 +92,7 @@ jobs:
       run: |
         cd immortalwrt-imagebuilder-21.02.7-x86-64.Linux-x86_64
         make image PACKAGES="qemu-ga pppoe-discovery luci-i18n-smartdns-zh-cn luci-app-passwall luci-i18n-passwall-zh-cn luci-i18n-zerotier-zh-cn luci-i18n-ttyd-zh-cn luci-i18n-attendedsysupgrade-zh-cn luci-i18n-opkg-zh-cn luci-i18n-ddns-zh-cn ddns-scripts-dnspod luci-i18n-upnp-zh-cn luci-i18n-firewall-zh-cn luci-i18n-vlmcsd-zh-cn luci-i18n-arpbind-zh-cn luci-i18n-base-zh-cn   luci-i18n-filetransfer-zh-cn ddns-scripts-cloudflare ddns-scripts_aliyun  luci-i18n-udpxy-zh-cn luci-i18n-accesscontrol-zh-cn luci-i18n-watchcat-zh-cn bind-host luci-i18n-ddns-go-zh-cn luci-i18n-wireguard-zh-cn luci-i18n-wechatpush-zh-cn luci-app-ddns-go luci-app-openclash luci-i18n-mwan3-zh-cn"
-        echo "FILE_DATE=$(date +"%Y%m%d-%H%M")" >> $GITHUB_ENV
+        echo "FILE_DATE=$(TZ=${TZ} date +"%Y%m%d-%H%M")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
     
@@ -118,8 +118,8 @@ jobs:
         echo " ⏏️ imagebuilder编译信息" >> release.txt
         echo "ImmortalWrt-21.02.7-x64" >> release.txt
         echo "🔗https://downloads.immortalwrt.org/releases/21.02.7/targets/x86/64/" >> release.txt
-        echo "⏰编译完成时间：$(date "+%Y年%m月%d日%H时%M分")" >> release.txt        
-        echo "TIME2=$(date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV
+        echo "⏰编译完成时间：$(TZ=${TZ} date "+%Y年%m月%d日%H时%M分")" >> release.txt
+        echo "TIME2=$(TZ=${TZ} date "+%Y年%m月%d日%H时%M分")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传发布release

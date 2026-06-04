@@ -49,8 +49,8 @@ jobs:
 
     - name: 记录开始时间
       run: |
-        echo "TIME0=$(date '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_ENV"
-        echo "RELEASE_TAG=$(date '+%Y.%m.%d-%H%M')" >> "$GITHUB_ENV"
+        echo "TIME0=$(TZ=${TZ} date '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_ENV"
+        echo "RELEASE_TAG=$(TZ=${TZ} date '+%Y.%m.%d-%H%M')" >> "$GITHUB_ENV"
 
     # 2️⃣ 准备构建环境
     - name: 准备构建环境
@@ -162,14 +162,14 @@ jobs:
           rm -rf packages
           df -hT  
           echo "FIRMWARE_DIR=$PWD" >> $GITHUB_ENV
-          echo "TIME1=$(date '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_ENV"
+          echo "TIME1=$(TZ=${TZ} date '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_ENV"
 
     # 1️⃣1️⃣ 计算编译耗时
     - name: 计算编译耗时
       run: |
         # 将 TIME0 和 TIME1 转换为 Unix 时间戳（秒）
-        START_TIME=$(date -u -d "${{ env.TIME0 }}" +%s)
-        END_TIME=$(date -u -d "${{ env.TIME1 }}" +%s)
+        START_TIME=$(TZ=${TZ} date -d "${{ env.TIME0 }}" +%s)
+        END_TIME=$(TZ=${TZ} date -d "${{ env.TIME1 }}" +%s)
         # 计算时间差（秒）
         ELAPSED_SECONDS=$((END_TIME - START_TIME))
         # 格式化为 HHh MMm SSs

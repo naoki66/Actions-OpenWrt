@@ -3,7 +3,7 @@ name: 检查上游tags更新并触发编译仓库
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 17 */3 * *'  # 每3天的北京时间01:00运行
+    - cron: '30 20 */3 * *'  # 每3天的北京时间04:30运行
 
 jobs:
   check-and-dispatch:
@@ -108,4 +108,3 @@ jobs:
           retain_days: 3
           keep_minimum_runs: 3
           dry_run: false
-
