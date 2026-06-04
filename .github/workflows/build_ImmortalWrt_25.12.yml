@@ -206,11 +206,23 @@ jobs:
 
     # 1️⃣5️⃣ 清理旧 Workflow 记录
     - name: 清理旧 Workflow 记录
-      uses: Mattraks/delete-workflow-runs@v2
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        retain_days: 3
-        keep_minimum_runs: 3
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WORKFLOW_FILE: build_ImmortalWrt_25.12.yml
+        RETAIN_DAYS: 3
+        KEEP_MINIMUM_RUNS: 3
+      run: |
+        cutoff="$(date -u -d "-${RETAIN_DAYS} days" '+%Y-%m-%dT%H:%M:%SZ')"
+        gh api --paginate "/repos/${{ github.repository }}/actions/workflows/${WORKFLOW_FILE}/runs?per_page=100" \
+          --jq '.workflow_runs[] | [.id, .created_at] | @tsv' |
+        sort -k2r |
+        awk -v keep="$KEEP_MINIMUM_RUNS" -v cutoff="$cutoff" 'NR > keep && $2 < cutoff { print $1 }' |
+        while read -r run_id; do
+          [ -z "$run_id" ] && continue
+          [ "$run_id" = "${{ github.run_id }}" ] && continue
+          echo "Deleting workflow run ${run_id}"
+          gh api -X DELETE "/repos/${{ github.repository }}/actions/runs/${run_id}" || true
+        done
 
     # 1️⃣6️⃣ 清理旧版本
     - name: 清理旧 Release
@@ -241,7 +253,7 @@ jobs:
     - name: 缓存上游更新哈希
       if: github.event_name == 'repository_dispatch' && github.event.client_payload.commit_hash != ''
       continue-on-error: true
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         path: .cache/immortalwrt-25-12-group
         key: commit-immortalwrt-25-12-group-${{ github.event.client_payload.commit_hash }}

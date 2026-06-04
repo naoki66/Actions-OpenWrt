@@ -45,7 +45,7 @@ jobs:
           echo "restore_probe_key=imagebuilder-buildinfo-${{ matrix.target }}-restore-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
 
       - name: 恢复 version.buildinfo 缓存
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ steps.vars.outputs.cache_path }}
           key: ${{ steps.vars.outputs.restore_probe_key }}
@@ -82,7 +82,7 @@ jobs:
 
       - name: 触发 ImageBuilder 编译
         if: steps.compare.outputs.trigger == 'true'
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           event-type: ImageBuilder_updated
@@ -98,7 +98,7 @@ jobs:
       - name: 缓存最新 version.buildinfo
         if: steps.compare.outputs.trigger == 'true'
         continue-on-error: true
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ${{ steps.vars.outputs.cache_path }}
           key: ${{ steps.compare.outputs.cache_key }}
@@ -112,10 +112,20 @@ jobs:
       actions: write
     steps:
       - name: 删除旧工作流运行记录
-        uses: Mattraks/delete-workflow-runs@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          retain_days: 3
-          keep_minimum_runs: 3
-          dry_run: false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_FILE: imagebuilder-update-checker.yml
+          RETAIN_DAYS: 3
+          KEEP_MINIMUM_RUNS: 3
+        run: |
+          cutoff="$(date -u -d "-${RETAIN_DAYS} days" '+%Y-%m-%dT%H:%M:%SZ')"
+          gh api --paginate "/repos/${{ github.repository }}/actions/workflows/${WORKFLOW_FILE}/runs?per_page=100" \
+            --jq '.workflow_runs[] | [.id, .created_at] | @tsv' |
+          sort -k2r |
+          awk -v keep="$KEEP_MINIMUM_RUNS" -v cutoff="$cutoff" 'NR > keep && $2 < cutoff { print $1 }' |
+          while read -r run_id; do
+            [ -z "$run_id" ] && continue
+            [ "$run_id" = "${{ github.run_id }}" ] && continue
+            echo "Deleting workflow run ${run_id}"
+            gh api -X DELETE "/repos/${{ github.repository }}/actions/runs/${run_id}" || true
+          done

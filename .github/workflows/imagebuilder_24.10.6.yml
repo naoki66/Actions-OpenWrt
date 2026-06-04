@@ -28,7 +28,7 @@ jobs:
     steps:
 
     - name: 恢复 version.buildinfo 缓存
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: ${{ env.BUILDINFO_CACHE_DIR }}
         key: version-buildinfo-imagebuilder24.10.6-x64-restore-${{ github.run_id }}
@@ -256,17 +256,29 @@ jobs:
     - name: 缓存 version.buildinfo
       if: steps.tag.outputs.status == 'success' && !cancelled()
       continue-on-error: true
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         path: ${{ env.BUILDINFO_CACHE_DIR }}
         key: version-buildinfo-imagebuilder24.10.6-x64-${{ hashFiles('.cache/version-buildinfo/imagebuilder24.10.6-x64/version.buildinfo') }}
         
     - name: 删除运行的工作流
-      uses: Mattraks/delete-workflow-runs@v2
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        retain_days: 5
-        keep_minimum_runs: 3
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WORKFLOW_FILE: imagebuilder_24.10.6.yml
+        RETAIN_DAYS: 5
+        KEEP_MINIMUM_RUNS: 3
+      run: |
+        cutoff="$(date -u -d "-${RETAIN_DAYS} days" '+%Y-%m-%dT%H:%M:%SZ')"
+        gh api --paginate "/repos/${{ github.repository }}/actions/workflows/${WORKFLOW_FILE}/runs?per_page=100" \
+          --jq '.workflow_runs[] | [.id, .created_at] | @tsv' |
+        sort -k2r |
+        awk -v keep="$KEEP_MINIMUM_RUNS" -v cutoff="$cutoff" 'NR > keep && $2 < cutoff { print $1 }' |
+        while read -r run_id; do
+          [ -z "$run_id" ] && continue
+          [ "$run_id" = "${{ github.run_id }}" ] && continue
+          echo "Deleting workflow run ${run_id}"
+          gh api -X DELETE "/repos/${{ github.repository }}/actions/runs/${run_id}" || true
+        done
 
     - name: 删除旧 Releases
       env:

@@ -7,6 +7,7 @@ on:
 
 jobs:
   check-repos:
+    name: check-repos (${{ matrix.repo_group.id }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
@@ -20,38 +21,17 @@ jobs:
       matrix:
         repo_group:
           - id: immortalwrt-24-10-group
-            repos:
-              - id: immortalwrt
-                url: https://github.com/immortalwrt/immortalwrt
-                branch: openwrt-24.10
-              - id: immortalwrt-packages
-                url: https://github.com/immortalwrt/packages
-                branch: openwrt-24.10
-              - id: luci-packages
-                url: https://github.com/immortalwrt/luci
-                branch: openwrt-24.10
+            repo_id: immortalwrt
+            url: https://github.com/immortalwrt/immortalwrt
+            branch: openwrt-24.10
           - id: immortalwrt-25-12-group
-            repos:
-              - id: immortalwrt
-                url: https://github.com/immortalwrt/immortalwrt
-                branch: openwrt-25.12
-              - id: immortalwrt-packages
-                url: https://github.com/immortalwrt/packages
-                branch: openwrt-25.12
-              - id: luci-packages
-                url: https://github.com/immortalwrt/luci
-                branch: openwrt-25.12
+            repo_id: immortalwrt
+            url: https://github.com/immortalwrt/immortalwrt
+            branch: openwrt-25.12
           - id: lede-group
-            repos:
-              - id: lede
-                url: https://github.com/coolsnowwolf/lede
-                branch: master
-              - id: lede-luci
-                url: https://github.com/coolsnowwolf/luci
-                branch: master
-              - id: lede-packages
-                url: https://github.com/coolsnowwolf/packages
-                branch: master
+            repo_id: lede
+            url: https://github.com/coolsnowwolf/lede
+            branch: master
 
     steps:
     - name: 设置缓存目录路径
@@ -63,31 +43,23 @@ jobs:
 
     - name: 恢复上次缓存的提交哈希
       id: restore-cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: ${{ steps.vars.outputs.cache_path }}
         key: ${{ steps.vars.outputs.restore_probe_key }}
-        restore-keys: ${{ steps.vars.outputs.restore_key }}
+        restore-keys: |
+          ${{ steps.vars.outputs.restore_key }}
 
     - name: 检查 ${{ matrix.repo_group.id }} 更新
       id: check-update
       run: |
-        GROUP_HASH=""
-        for repo in $(echo '${{ toJson(matrix.repo_group.repos) }}' | jq -c '.[]'); do
-          REPO_ID=$(echo $repo | jq -r '.id')
-          REPO_URL=$(echo $repo | jq -r '.url')
-          REPO_BRANCH=$(echo $repo | jq -r '.branch')
-          # 直接获取最新 commit 哈希，避免完整克隆
-          LATEST_HASH=$(git ls-remote $REPO_URL $REPO_BRANCH | cut -f1)
-          if [[ -z "$LATEST_HASH" ]]; then
-            echo "::error::无法获取 $REPO_ID 的 $REPO_BRANCH 分支最新提交"
-            exit 1
-          fi
-          echo "仓库 $REPO_ID 最新提交: $LATEST_HASH"
-          GROUP_HASH="$GROUP_HASH$LATEST_HASH"
-        done
-        GROUP_HASH=$(echo -n "$GROUP_HASH" | sha256sum | awk '{print $1}')
-        echo "组 ${{ matrix.repo_group.id }} 组合哈希: $GROUP_HASH"
+        # 只用主源码仓库判断是否触发编译，feeds 仓库仍在构建时更新并写入 release 日志。
+        GROUP_HASH=$(git ls-remote "${{ matrix.repo_group.url }}" "${{ matrix.repo_group.branch }}" | cut -f1)
+        if [[ -z "$GROUP_HASH" ]]; then
+          echo "::error::无法获取 ${{ matrix.repo_group.repo_id }} 的 ${{ matrix.repo_group.branch }} 分支最新提交"
+          exit 1
+        fi
+        echo "仓库 ${{ matrix.repo_group.repo_id }} 最新提交: $GROUP_HASH"
         echo "GROUP_HASH=$GROUP_HASH" >> $GITHUB_ENV  # 提供给触发器使用
         echo "cache_key=commit-${{ matrix.repo_group.id }}-$GROUP_HASH" >> "$GITHUB_OUTPUT"
 
@@ -106,13 +78,13 @@ jobs:
           fi
         fi
 
-        # 有更新，缓存由被触发的构建工作流在成功后写入
+        echo "$GROUP_HASH" > "$CACHE_FILE"
         echo "has_update=true" >> "$GITHUB_OUTPUT"
         echo "检测到新提交！"
 
     - name: 触发构建
       if: steps.check-update.outputs.has_update == 'true'
-      uses: peter-evans/repository-dispatch@v2
+      uses: peter-evans/repository-dispatch@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         event-type: ${{ matrix.repo_group.id }}-update
@@ -122,10 +94,37 @@ jobs:
             "commit_hash": "${{ env.GROUP_HASH }}"
           }
 
-    - name: 删除旧工作流运行记录
-      uses: Mattraks/delete-workflow-runs@v2
+    - name: 缓存已触发的提交哈希
+      if: steps.check-update.outputs.has_update == 'true'
+      continue-on-error: true
+      uses: actions/cache/save@v5
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        repository: ${{ github.repository }}
-        retain_days: 3
-        keep_minimum_runs: 3
+        path: ${{ steps.vars.outputs.cache_path }}
+        key: ${{ steps.check-update.outputs.cache_key }}
+
+  cleanup:
+    needs: check-repos
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+    - name: 删除旧工作流运行记录
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WORKFLOW_FILE: update-checker.yml
+        RETAIN_DAYS: 3
+        KEEP_MINIMUM_RUNS: 3
+      run: |
+        cutoff="$(date -u -d "-${RETAIN_DAYS} days" '+%Y-%m-%dT%H:%M:%SZ')"
+        gh api --paginate "/repos/${{ github.repository }}/actions/workflows/${WORKFLOW_FILE}/runs?per_page=100" \
+          --jq '.workflow_runs[] | [.id, .created_at] | @tsv' |
+        sort -k2r |
+        awk -v keep="$KEEP_MINIMUM_RUNS" -v cutoff="$cutoff" 'NR > keep && $2 < cutoff { print $1 }' |
+        while read -r run_id; do
+          [ -z "$run_id" ] && continue
+          [ "$run_id" = "${{ github.run_id }}" ] && continue
+          echo "Deleting workflow run ${run_id}"
+          gh api -X DELETE "/repos/${{ github.repository }}/actions/runs/${run_id}" || true
+        done
