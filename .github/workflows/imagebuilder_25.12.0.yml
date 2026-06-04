@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
   repository_dispatch:
     types:
-      - Tag_updated
+      - ImageBuilder_updated
   schedule:
-    - cron: "0 22 1,15 * *"  # 北京时间每月2日和16日06:00，约每2周
+    - cron: "0 22 1 * *"  # 北京时间每月2日06:00，月度兜底编译
 
 env:
   TZ: Asia/Shanghai
@@ -15,7 +15,7 @@ env:
 
 jobs:
   build:
-    if: github.event_name != 'repository_dispatch' || startsWith(github.event.client_payload.tag, 'v25.12.')
+    if: github.event_name != 'repository_dispatch' || github.event.client_payload.target == 'imagebuilder25.12.0-x64'
     runs-on: ubuntu-22.04
     timeout-minutes: 120
     concurrency:

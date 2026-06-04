@@ -1,0 +1,121 @@
+name: 检查 ImageBuilder 更新并触发编译
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 20 * * *'  # 北京时间每天04:30检查，只有 version.buildinfo 变化才触发编译
+
+jobs:
+  check-and-dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: imagebuilder-update-checker
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      actions: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: imagebuilder21.02.7-x86-64
+            version: 21.02.7
+            url: https://downloads.immortalwrt.org/releases/21.02.7/targets/x86/64/version.buildinfo
+          - target: imagebuilder23.05.7-x86-64
+            version: 23.05.7
+            url: https://downloads.immortalwrt.org/releases/23.05.7/targets/x86/64/version.buildinfo
+          - target: imagebuilder24.10.4-rockchip
+            version: 24.10.4
+            url: https://downloads.immortalwrt.org/releases/24.10.4/targets/rockchip/armv8/version.buildinfo
+          - target: imagebuilder24.10.6-x64
+            version: 24.10.6
+            url: https://downloads.immortalwrt.org/releases/24.10.6/targets/x86/64/version.buildinfo
+          - target: imagebuilder25.12.0-x64
+            version: 25.12.0
+            url: https://downloads.immortalwrt.org/releases/25.12.0/targets/x86/64/version.buildinfo
+
+    steps:
+      - name: 设置缓存参数
+        id: vars
+        run: |
+          echo "cache_path=.imagebuilder-buildinfo-cache/${{ matrix.target }}" >> "$GITHUB_OUTPUT"
+          echo "restore_key=imagebuilder-buildinfo-${{ matrix.target }}-" >> "$GITHUB_OUTPUT"
+          echo "restore_probe_key=imagebuilder-buildinfo-${{ matrix.target }}-restore-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+
+      - name: 恢复 version.buildinfo 缓存
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ steps.vars.outputs.cache_path }}
+          key: ${{ steps.vars.outputs.restore_probe_key }}
+          restore-keys: |
+            ${{ steps.vars.outputs.restore_key }}
+
+      - name: 获取并比较 version.buildinfo
+        id: compare
+        run: |
+          mkdir -p "${{ steps.vars.outputs.cache_path }}"
+          curl -fsSL "${{ matrix.url }}" -o current-version.buildinfo
+          current_hash=$(sha256sum current-version.buildinfo | awk '{print $1}')
+          last_file="${{ steps.vars.outputs.cache_path }}/version.buildinfo"
+
+          if [ -f "$last_file" ]; then
+            last_hash=$(sha256sum "$last_file" | awk '{print $1}')
+          else
+            last_hash=""
+          fi
+
+          echo "当前 ${{ matrix.target }} version.buildinfo hash: $current_hash"
+          echo "上次 ${{ matrix.target }} version.buildinfo hash: ${last_hash:-无}"
+
+          if [ "$current_hash" != "$last_hash" ]; then
+            echo "检测到 ${{ matrix.target }} version.buildinfo 变化"
+            echo "trigger=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "${{ matrix.target }} version.buildinfo 未变化"
+            echo "trigger=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          cp current-version.buildinfo "$last_file"
+          echo "cache_key=imagebuilder-buildinfo-${{ matrix.target }}-$current_hash" >> "$GITHUB_OUTPUT"
+
+      - name: 触发 ImageBuilder 编译
+        if: steps.compare.outputs.trigger == 'true'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: ImageBuilder_updated
+          client-payload: >-
+            {
+              "target": "${{ matrix.target }}",
+              "version": "${{ matrix.version }}",
+              "buildinfo_url": "${{ matrix.url }}",
+              "source": "version-buildinfo-checker",
+              "timestamp": "${{ github.run_id }}"
+            }
+
+      - name: 缓存最新 version.buildinfo
+        if: steps.compare.outputs.trigger == 'true'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ steps.vars.outputs.cache_path }}
+          key: ${{ steps.compare.outputs.cache_key }}
+
+  cleanup:
+    needs: check-and-dispatch
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: 删除旧工作流运行记录
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 3
+          keep_minimum_runs: 3
+          dry_run: false
