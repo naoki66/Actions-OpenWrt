@@ -146,34 +146,20 @@ jobs:
 
     - name: 删除旧 Releases
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         RELEASE_PREFIX: imagebuilder23.05.7-x86-64-
-        KEEP_LATEST: 12
+        KEEP_LATEST: 8
       run: |
-        releases=$(curl -fsSL \
-          -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-          -H "Accept: application/vnd.github+json" \
-          "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases?per_page=100")
-
-        echo "$releases" | jq -r --arg prefix "$RELEASE_PREFIX" --argjson keep "$KEEP_LATEST" '
-          map(select(.tag_name | startswith($prefix)))
-          | sort_by(.created_at)
-          | reverse
-          | .[$keep:]
-          | .[]
-          | [.id, .tag_name]
-          | @tsv
-        ' | while IFS=$'\t' read -r release_id tag_name; do
-          [ -z "$release_id" ] && continue
+        gh release list --limit 100 --json tagName,createdAt \
+          --jq '[.[] | select(.tagName | startswith(env.RELEASE_PREFIX))]
+            | sort_by(.createdAt)
+            | reverse
+            | .[(env.KEEP_LATEST | tonumber):]
+            | .[].tagName' |
+        while read -r tag_name; do
+          [ -z "$tag_name" ] && continue
           echo "Deleting release ${tag_name}"
-          curl -fsSL -X DELETE \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${release_id}"
-          curl -fsSL -X DELETE \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/refs/tags/${tag_name}" || true
+          gh release delete "$tag_name" --cleanup-tag --yes
         done
 
                
