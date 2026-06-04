@@ -197,11 +197,11 @@ jobs:
           tag_name: immortalwrt-25.12-X64-${{ env.RELEASE_TAG }}
           name: immortalwrt-25.12-X64-${{ env.RELEASE_TAG }}
           body: |
-            📦 **编译时间段**  
-            ⏰ 从 **${{ env.TIME0 }}** 到 **${{ env.TIME1 }}**  
-            🕒 **总耗时：${{ env.ELAPSED }}**
-            🔄 **上游更新日志**  
-               ${{ env.CHANGELOG_CONTENT || '无更新日志内容' }}
+            📦 编译时间段
+            ⏰ 从 ${{ env.TIME0 }} 到 ${{ env.TIME1 }}
+            🕒 总耗时：${{ env.ELAPSED }}
+            🔄 上游更新日志
+            ${{ env.CHANGELOG_CONTENT || '无更新日志内容' }}
           files: ${{ env.FIRMWARE_DIR }}/*
 
     # 1️⃣5️⃣ 清理旧 Workflow 记录
