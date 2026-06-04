@@ -1,4 +1,4 @@
-name: imagebuilder编译21.02.7
+﻿name: imagebuilder编译21.02.7
 on: 
   workflow_dispatch:
   repository_dispatch:
@@ -8,6 +8,7 @@ on:
     - cron: "0 21 1 * *"  # 北京时间每月2日05:00，月度兜底编译
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   TZ: Asia/Shanghai
   BUILDINFO_URL: https://downloads.immortalwrt.org/releases/21.02.7/targets/x86/64/version.buildinfo
   BUILDINFO_CACHE_DIR: .cache/version-buildinfo/imagebuilder21.02.7-x86-64
@@ -135,7 +136,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传firmware文件夹
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
         name: imagebuilder-21.02.7-x86-64-${{ env.FILE_DATE }}
@@ -164,7 +165,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传发布release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

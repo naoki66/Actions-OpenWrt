@@ -1,9 +1,12 @@
-name: 检查 ImageBuilder 更新并触发编译
+﻿name: 检查 ImageBuilder 更新并触发编译
 
 on:
   workflow_dispatch:
   schedule:
     - cron: '30 20 * * *'  # 北京时间每天04:30检查，只有 version.buildinfo 变化才触发编译
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   check-and-dispatch:

@@ -1,9 +1,12 @@
-name: 检查上游commits更新并触发编译仓库
+﻿name: 检查上游commits更新并触发编译仓库
 
 on:
   workflow_dispatch:
   schedule:
     - cron: '40 15 * * *'  # 中国时间每天23:40，给源码编译预留夜间窗口
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   check-repos:

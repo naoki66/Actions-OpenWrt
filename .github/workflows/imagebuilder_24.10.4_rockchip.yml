@@ -1,4 +1,4 @@
-name: imagebuilder编译24.10.4_rockchip
+﻿name: imagebuilder编译24.10.4_rockchip
 on: 
   workflow_dispatch:
   repository_dispatch:
@@ -8,6 +8,7 @@ on:
     - cron: "30 21 1 * *"  # 北京时间每月2日05:30，月度兜底编译
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   TZ: Asia/Shanghai
   BUILDINFO_URL: https://downloads.immortalwrt.org/releases/24.10.4/targets/rockchip/armv8/version.buildinfo
   BUILDINFO_CACHE_DIR: .cache/version-buildinfo/imagebuilder24.10.4-rockchip
@@ -128,7 +129,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传firmware文件夹
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
         name: imagebuilder-24.10.4-rockchip-${{ env.FILE_DATE }}
@@ -157,7 +158,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传发布release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
