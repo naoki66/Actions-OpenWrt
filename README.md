@@ -111,6 +111,8 @@ files/immortalwrt/etc/config/google_fu_mode
 
 不要把通用配置直接放在仓库根部的 `files/etc/...`。如果确实需要两边共用，分别复制到 `files/lede/` 和 `files/immortalwrt/`，这样后续仍能独立调整。
 
+空目录可以用 `.gitkeep` 保留；源码编译工作流在复制 `files/` 时会排除 `.gitkeep` 和 `.gitignore`，它们不会进入最终固件。
+
 ## 增加软件包
 
 ### 源码编译工作流

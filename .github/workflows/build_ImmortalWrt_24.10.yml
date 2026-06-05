@@ -110,7 +110,7 @@ jobs:
         CUSTOM_FILES_DIR="$GITHUB_WORKSPACE/files/immortalwrt"
         if [ -d "$CUSTOM_FILES_DIR" ]; then
           mkdir -p immortalwrt/files
-          cp -a "$CUSTOM_FILES_DIR"/. immortalwrt/files/
+          rsync -a --exclude='.gitkeep' --exclude='.gitignore' "$CUSTOM_FILES_DIR"/ immortalwrt/files/
         fi
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE immortalwrt/.config
         chmod +x $DIY_P2_SH

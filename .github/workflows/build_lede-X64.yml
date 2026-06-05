@@ -110,7 +110,7 @@ jobs:
         CUSTOM_FILES_DIR="$GITHUB_WORKSPACE/files/lede"
         if [ -d "$CUSTOM_FILES_DIR" ]; then
           mkdir -p lede/files
-          cp -a "$CUSTOM_FILES_DIR"/. lede/files/
+          rsync -a --exclude='.gitkeep' --exclude='.gitignore' "$CUSTOM_FILES_DIR"/ lede/files/
         fi
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE lede/.config
         chmod +x $DIY_P2_SH
