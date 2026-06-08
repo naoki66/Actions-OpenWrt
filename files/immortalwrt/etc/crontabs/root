@@ -1,3 +1,3 @@
-0 5 * * * /usr/share/mosdns/mosdns.uc update
-30 6 * * * /bin/sh /root/auto_update_mosdns.sh > /dev/null 2>&1
-30 18 * * * /bin/sh /root/auto_update_mosdns.sh > /dev/null 2>&1
+#0 5 * * * /usr/share/mosdns/mosdns.uc update
+#30 6 * * * /bin/sh /root/auto_update_mosdns.sh > /dev/null 2>&1
+#30 18 * * * /bin/sh /root/auto_update_mosdns.sh > /dev/null 2>&1
