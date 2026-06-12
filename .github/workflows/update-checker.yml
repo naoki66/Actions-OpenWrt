@@ -37,51 +37,47 @@ jobs:
             branch: master
 
     steps:
-    - name: 设置缓存目录路径
-      id: vars
+    - name: 获取远程仓库最新提交哈希
+      id: get-hash
       run: |
-        echo "cache_path=.cache/${{ matrix.repo_group.id }}" >> "$GITHUB_OUTPUT"
-        echo "restore_key=commit-${{ matrix.repo_group.id }}-" >> "$GITHUB_OUTPUT"
-        echo "restore_probe_key=commit-${{ matrix.repo_group.id }}-restore-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
-
-    - name: 恢复上次缓存的提交哈希
-      id: restore-cache
-      uses: actions/cache/restore@v5
-      with:
-        path: ${{ steps.vars.outputs.cache_path }}
-        key: ${{ steps.vars.outputs.restore_probe_key }}
-        restore-keys: |
-          ${{ steps.vars.outputs.restore_key }}
-
-    - name: 检查 ${{ matrix.repo_group.id }} 更新
-      id: check-update
-      run: |
-        # 只用主源码仓库判断是否触发编译，feeds 仓库仍在构建时更新并写入 release 日志。
         GROUP_HASH=$(git ls-remote "${{ matrix.repo_group.url }}" "${{ matrix.repo_group.branch }}" | cut -f1)
         if [[ -z "$GROUP_HASH" ]]; then
           echo "::error::无法获取 ${{ matrix.repo_group.repo_id }} 的 ${{ matrix.repo_group.branch }} 分支最新提交"
           exit 1
         fi
         echo "仓库 ${{ matrix.repo_group.repo_id }} 最新提交: $GROUP_HASH"
-        echo "GROUP_HASH=$GROUP_HASH" >> $GITHUB_ENV  # 提供给触发器使用
+        echo "GROUP_HASH=$GROUP_HASH" >> $GITHUB_ENV
         echo "cache_key=commit-${{ matrix.repo_group.id }}-$GROUP_HASH" >> "$GITHUB_OUTPUT"
+        echo "cache_path=.cache/${{ matrix.repo_group.id }}" >> "$GITHUB_OUTPUT"
+        echo "restore_key=commit-${{ matrix.repo_group.id }}-" >> "$GITHUB_OUTPUT"
 
-        # 定位缓存文件
-        CACHE_FILE="${{ steps.vars.outputs.cache_path }}/last_commit"
+    - name: 恢复上次缓存的提交哈希
+      id: restore-cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ${{ steps.get-hash.outputs.cache_path }}
+        key: ${{ steps.get-hash.outputs.cache_key }}
+        restore-keys: |
+          ${{ steps.get-hash.outputs.restore_key }}
+
+    - name: 检查 ${{ matrix.repo_group.id }} 更新
+      id: check-update
+      run: |
+        CACHE_FILE="${{ steps.get-hash.outputs.cache_path }}/last_commit"
         mkdir -p "$(dirname "$CACHE_FILE")"
 
-        # 在检查更新步骤中添加
         if [[ -f "$CACHE_FILE" ]]; then
           OLD_HASH=$(cat "$CACHE_FILE")
           echo "缓存中的旧哈希: $OLD_HASH"
-          if [[ "$OLD_HASH" == "$GROUP_HASH" ]]; then
+          if [[ "$OLD_HASH" == "${{ env.GROUP_HASH }}" ]]; then
             echo "has_update=false" >> "$GITHUB_OUTPUT"
             echo "无新提交"
+            echo "cache_key=${{ steps.get-hash.outputs.cache_key }}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
         fi
 
-        echo "$GROUP_HASH" > "$CACHE_FILE"
+        echo "${{ env.GROUP_HASH }}" > "$CACHE_FILE"
         echo "has_update=true" >> "$GITHUB_OUTPUT"
         echo "检测到新提交！"
 
@@ -97,13 +93,12 @@ jobs:
             "commit_hash": "${{ env.GROUP_HASH }}"
           }
 
-    - name: 缓存已触发的提交哈希
-      if: steps.check-update.outputs.has_update == 'true'
+    - name: 缓存提交哈希
       continue-on-error: true
       uses: actions/cache/save@v5
       with:
-        path: ${{ steps.vars.outputs.cache_path }}
-        key: ${{ steps.check-update.outputs.cache_key }}
+        path: ${{ steps.get-hash.outputs.cache_path }}
+        key: ${{ steps.get-hash.outputs.cache_key }}
 
   cleanup:
     needs: check-repos

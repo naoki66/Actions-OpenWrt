@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:
-      group: imagebuilder-update-checker
+      group: imagebuilder-update-checker-${{ matrix.target }}
       cancel-in-progress: false
     permissions:
       contents: write
