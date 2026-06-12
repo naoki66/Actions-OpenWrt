@@ -93,7 +93,8 @@ jobs:
             "commit_hash": "${{ env.GROUP_HASH }}"
           }
 
-    - name: 缓存提交哈希
+    - name: 缓存提交哈希（仅当缓存未命中或有更新时）
+      if: steps.restore-cache.outputs.cache-hit != 'true' || steps.check-update.outputs.has_update == 'true'
       continue-on-error: true
       uses: actions/cache/save@v5
       with:
