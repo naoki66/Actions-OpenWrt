@@ -66,20 +66,28 @@ jobs:
         CACHE_FILE="${{ steps.get-hash.outputs.cache_path }}/last_commit"
         mkdir -p "$(dirname "$CACHE_FILE")"
 
+        HAS_UPDATE="false"
         if [[ -f "$CACHE_FILE" ]]; then
           OLD_HASH=$(cat "$CACHE_FILE")
           echo "缓存中的旧哈希: $OLD_HASH"
           if [[ "$OLD_HASH" == "${{ env.GROUP_HASH }}" ]]; then
-            echo "has_update=false" >> "$GITHUB_OUTPUT"
             echo "无新提交"
-            echo "cache_key=${{ steps.get-hash.outputs.cache_key }}" >> "$GITHUB_OUTPUT"
-            exit 0
+            HAS_UPDATE="false"
+          else
+            echo "检测到新提交！"
+            HAS_UPDATE="true"
           fi
+        else
+          echo "缓存文件不存在，视为首次运行或缓存已过期"
+          HAS_UPDATE="true"
         fi
 
-        echo "${{ env.GROUP_HASH }}" > "$CACHE_FILE"
-        echo "has_update=true" >> "$GITHUB_OUTPUT"
-        echo "检测到新提交！"
+        if [[ "$HAS_UPDATE" == "true" ]]; then
+          echo "${{ env.GROUP_HASH }}" > "$CACHE_FILE"
+        fi
+
+        echo "has_update=$HAS_UPDATE" >> "$GITHUB_OUTPUT"
+        echo "cache_key=${{ steps.get-hash.outputs.cache_key }}" >> "$GITHUB_OUTPUT"
 
     - name: 触发构建
       if: steps.check-update.outputs.has_update == 'true'
@@ -93,13 +101,13 @@ jobs:
             "commit_hash": "${{ env.GROUP_HASH }}"
           }
 
-    - name: 缓存提交哈希（仅当缓存未命中或有更新时）
-      if: steps.restore-cache.outputs.cache-hit != 'true' || steps.check-update.outputs.has_update == 'true'
+    - name: 缓存提交哈希
+      if: steps.check-update.outputs.has_update == 'true' || steps.restore-cache.outputs.cache-hit != 'true'
       continue-on-error: true
       uses: actions/cache/save@v5
       with:
         path: ${{ steps.get-hash.outputs.cache_path }}
-        key: ${{ steps.get-hash.outputs.cache_key }}
+        key: ${{ steps.check-update.outputs.cache_key }}
 
   cleanup:
     needs: check-repos
