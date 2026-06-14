@@ -156,7 +156,7 @@ jobs:
       id: compile
       run: |
           cd immortalwrt
-          make V=s -j2 || make V=s -j1
+          make V=s -j1
 
     # 1️⃣1️⃣ 整理固件
     - name: 整理输出路径
