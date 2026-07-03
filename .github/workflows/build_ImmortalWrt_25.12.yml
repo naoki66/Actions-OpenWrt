@@ -90,18 +90,31 @@ jobs:
     # 5️⃣ 自定义 feeds，DIY_P1_SH
     - name: 应用自定义feeds和DIY_P1_SH
       run: |
-        ##[ -e $FEEDS_CONF ] && mv $FEEDS_CONF immortalwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd immortalwrt
+        echo "当前目录: $(pwd)"
+        echo "执行 DIY_P1_SH..."
+        set -x
         $GITHUB_WORKSPACE/$DIY_P1_SH
+        set +x
+        echo "DIY_P1_SH 执行完成，feeds.conf.default 内容:"
+        cat feeds.conf.default
 
 
     # 6️⃣ 更新和安装 feeds
     - name: 更新和安装 feeds
       run: |
         cd immortalwrt
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a -f
+        echo "更新 feeds..."
+        ./scripts/feeds update -a 2>&1 | tail -50
+        
+        echo "删除 feeds 中与手动克隆冲突的包..."
+        rm -rf feeds/packages/net/mosdns feeds/packages/net/v2ray-geodata
+        
+        echo "安装 feeds..."
+        ./scripts/feeds install -a -f 2>&1 | tail -50
+        echo "检查已安装的包:"
+        ./scripts/feeds list | grep -E "(lucky|mosdns|rtp2httpd)" || true
 
 
     # 7️⃣ 自定义配置config，DIY_P2_SH
@@ -156,7 +169,14 @@ jobs:
       id: compile
       run: |
           cd immortalwrt
-          make V=s -j2
+          echo "开始编译，线程数: 2"
+          echo "当前目录: $(pwd)"
+          echo "可用内存:"
+          free -h
+          echo "可用磁盘:"
+          df -hT
+          set -o pipefail
+          make V=s -j2 2>&1 | tee compile.log | tail -200
 
     # 1️⃣1️⃣ 整理固件
     - name: 整理输出路径
