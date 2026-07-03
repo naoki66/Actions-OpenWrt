@@ -41,7 +41,7 @@ jobs:
       actions: write    # 允许触发其他工作流
 
     steps:
-# 1️⃣ 检出仓库并记录开始时间
+    # 1️⃣ 检出仓库并记录开始时间
     - name: 检出仓库
       uses: actions/checkout@v6
       with:
@@ -53,7 +53,7 @@ jobs:
         echo "TIME0=$(TZ=${TZ} date '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_ENV"
         echo "RELEASE_TAG=$(TZ=${TZ} date '+%Y.%m.%d-%H%M')" >> "$GITHUB_ENV"
         
-# 2️⃣ 准备构建环境
+    # 2️⃣ 准备构建环境
     - name: 准备构建环境
       env: { DEBIAN_FRONTEND: noninteractive }
       run: |
@@ -78,7 +78,7 @@ jobs:
         sudo mkdir -p /mnt/workdir 
         sudo chown $USER:$GROUPS /mnt/workdir
 
-# 3️⃣ 克隆源码
+    # 3️⃣ 克隆源码
     - name: 克隆 ImmortalWrt 源码
       working-directory: /mnt/workdir
       run: |
@@ -188,7 +188,7 @@ jobs:
           echo "FIRMWARE_DIR=$PWD" >> $GITHUB_ENV
           echo "TIME1=$(TZ=${TZ} date '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_ENV"
 
-       # 1️⃣2️⃣ 计算编译耗时
+    # 1️⃣2️⃣ 计算编译耗时
     - name: 计算编译耗时
       run: |
         # 将 TIME0 和 TIME1 转换为 Unix 时间戳（秒）
@@ -212,7 +212,7 @@ jobs:
           name: immortalwrt-25.12-X64-${{ github.run_number }}
           path: ${{ env.FIRMWARE_DIR }}
 
-   # 1️⃣4️⃣ 创建 GitHub 发布版本
+    # 1️⃣4️⃣ 创建 GitHub 发布版本
     - name: 创建 GitHub 发布版本
       if: env.UPLOAD_RELEASE == 'true'
       uses: softprops/action-gh-release@v3
