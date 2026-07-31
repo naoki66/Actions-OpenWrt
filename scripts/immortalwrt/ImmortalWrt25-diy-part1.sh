@@ -5,9 +5,9 @@ set -e
 echo "=== 开始执行 DIY_P1_SH ==="
 
 echo "添加 lucky..."
-git clone --depth 1 https://github.com/gdy666/luci-app-lucky.git package/lucky || {
+git clone --depth 1 https://github.com/whzhni1/luci-app-lucky.git package/lucky || {
   echo "警告: 克隆 lucky 失败，尝试使用浅克隆..."
-  git clone --depth 1 --single-branch https://github.com/gdy666/luci-app-lucky.git package/lucky || {
+  git clone --depth 1 --single-branch https://github.com/whzhni1/luci-app-lucky.git package/lucky || {
     echo "错误: 克隆 lucky 失败"
     exit 1
   }
