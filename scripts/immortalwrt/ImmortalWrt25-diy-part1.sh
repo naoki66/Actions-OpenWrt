@@ -22,6 +22,13 @@ echo "src-git rtp2httpd https://github.com/stackia/rtp2httpd.git;main" >> "feeds
 echo "添加 passwall2 feed..."
 echo "src-git passwall2 https://github.com/Openwrt-Passwall/openwrt-passwall2.git;main" >> "feeds.conf.default"
 
+echo "添加 easytier feed..."
+echo "src-git easytier https://github.com/EasyTier/luci-app-easytier.git;main" >> "feeds.conf.default"
+
+echo "添加 bandix feed..."
+echo "src-git openwrt_bandix https://github.com/timsaya/openwrt-bandix.git;main" >> "feeds.conf.default"
+echo "src-git luci_app_bandix https://github.com/timsaya/luci-app-bandix.git;main" >> "feeds.conf.default"
+
 echo "更新 luci-app-mosdns..."
 rm -rf feeds/packages/net/v2ray-geodata
 rm -rf feeds/packages/net/mosdns
