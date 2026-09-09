@@ -19,6 +19,9 @@ git clone --depth 1 https://github.com/whzhni1/luci-app-lucky.git package/lucky 
 echo "添加 rtp2httpd feed..."
 echo "src-git rtp2httpd https://github.com/stackia/rtp2httpd.git;main" >> "feeds.conf.default"
 
+echo "添加 passwall2 feed..."
+echo "src-git passwall2 https://github.com/Openwrt-Passwall/openwrt-passwall2.git;main" >> "feeds.conf.default"
+
 echo "更新 luci-app-mosdns..."
 rm -rf feeds/packages/net/v2ray-geodata
 rm -rf feeds/packages/net/mosdns
