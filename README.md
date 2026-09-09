@@ -114,21 +114,31 @@ files/immortalwrt/etc/config/google_fu_mode
 
 空目录可以用 `.gitkeep` 保留；源码编译工作流在复制 `files/` 时会排除 `.gitkeep` 和 `.gitignore`，它们不会进入最终固件。
 
-## Open-Box 内置安装器
+## Open-Box 完整内置
 
-ImmortalWrt 25.12 和 master X64 源码编译会内置 `luci-app-openbox`。该包不会提前占用 `/opt/open-box`，避免 Open-Box 官方安装脚本误判为已有完整安装；固件只预置 LuCI 入口、服务兜底页、后台安装器和官方 `install.sh`。
+ImmortalWrt 25.12 和 master X64 源码编译会内置 `luci-app-openbox`。构建时会解析 Open-Box 官方 `install.sh` 中的 `REPO`、`INSTALL_ROOT`、`ASSET`、`ASSET_URL` 和 `SHA_URL` 规则，下载 `open-box-linux-x64.tar.gz`，校验 SHA256 后解包到固件的 `/opt/open-box`。
 
-刷机后可通过两种方式安装完整 Open-Box：
+刷机后 Open-Box 面板会在首次启动时自动启用并拉起，无需再 SSH 下载或手动安装；浏览器打开：
 
 ```bash
-# LuCI：服务 -> Open-Box 安装 -> 镜像加速安装
+http://<路由器IP>:2026
+```
 
-# SSH：走内置官方安装脚本
+首次打开面板按 Open-Box 官方流程设置管理密码。固件也保留了 SSH 兜底命令：
+
+```bash
+# 已内置时显示版本和面板地址；如 /opt/open-box 被删除，则回退执行官方 install.sh
 openbox-install --mirror
 openbox-install --direct
 ```
 
-LuCI 安装页会调用 `/usr/bin/openbox-bootstrap` 在后台运行安装，日志写入 `/tmp/openbox-install.log`，状态写入 `/tmp/openbox-install.status`。安装完成后打开 `http://<路由器IP>:2026` 设置面板密码。
+首启脚本只启用/启动 `openbox-panel`，不会自动启动 `openbox` 内核服务；代理内核仍由用户在面板完成订阅和分流配置后手动启用。
+
+如果构建机直连 GitHub 不稳定，可在构建前设置镜像前缀，下载方式与官方脚本一致：
+
+```bash
+OPENBOX_RELEASE_MIRROR=https://ghfast.top bash scripts/debian-build-from-workflow.sh --target 25.12
+```
 
 ## 增加软件包
 
