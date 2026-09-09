@@ -1,22 +1,22 @@
-name: "构建immortalwrt-25.12-X64固件"
+name: "构建immortalwrt-master-X64固件"
 
 on:
   repository_dispatch:
-    types: 
-      - immortalwrt-25-12-group-update
+    types:
+      - immortalwrt-master-group-update
   workflow_dispatch:
   # 已注释掉定期自动编译，仅在上游更新或手动触发时编译
   # schedule:
-  #   - cron: '20 12 */7 * *'    # 每 7 天 
+  #   - cron: '20 12 */7 * *'    # 每 7 天
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   # ───── 源码与脚本 ─────
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: openwrt-25.12
-  CONFIG_FILE: config/immortalwrt/ImmortalWrt-25.12-x64.config
-  DIY_P1_SH: scripts/immortalwrt/ImmortalWrt25-diy-part1.sh
-  DIY_P2_SH: scripts/immortalwrt/ImmortalWrt25-diy-part2.sh
+  REPO_BRANCH: master
+  CONFIG_FILE: config/immortalwrt/ImmortalWrt-master-x64.config
+  DIY_P1_SH: scripts/immortalwrt/ImmortalWrt-master-diy-part1.sh
+  DIY_P2_SH: scripts/immortalwrt/ImmortalWrt-master-diy-part2.sh
 
   # ───── 上传/发布选项 ─────
   UPLOAD_FIRMWARE: 'true'
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 360
     concurrency:
-      group: immortalwrt-x64-25.12-${{ github.ref }}  # 按分支隔离并发
+      group: immortalwrt-x64-master-${{ github.ref }}  # 按分支隔离并发
       cancel-in-progress: true             # 取消旧任务，执行最新任务
     permissions:
       contents: write   # 允许推送构建产物到仓库
@@ -52,7 +52,7 @@ jobs:
       run: |
         echo "TIME0=$(TZ=${TZ} date '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_ENV"
         echo "RELEASE_TAG=$(TZ=${TZ} date '+%Y.%m.%d-%H%M')" >> "$GITHUB_ENV"
-        
+
     # 2️⃣ 准备构建环境
     - name: 准备构建环境
       env: { DEBIAN_FRONTEND: noninteractive }
@@ -75,7 +75,7 @@ jobs:
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
-        sudo mkdir -p /mnt/workdir 
+        sudo mkdir -p /mnt/workdir
         sudo chown $USER:$GROUPS /mnt/workdir
 
     # 3️⃣ 克隆源码
@@ -107,10 +107,10 @@ jobs:
         cd immortalwrt
         echo "更新 feeds..."
         ./scripts/feeds update -a 2>&1 | tail -50
-        
+
         echo "删除 feeds 中与手动克隆冲突的包..."
         rm -rf feeds/packages/net/mosdns feeds/packages/net/v2ray-geodata
-        
+
         echo "安装 feeds..."
         ./scripts/feeds install -a -f 2>&1 | tail -50
         echo "检查已安装的包:"
@@ -129,7 +129,7 @@ jobs:
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE immortalwrt/.config
         chmod +x $DIY_P2_SH
         cd immortalwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH        
+        $GITHUB_WORKSPACE/$DIY_P2_SH
 
 
     # 8️⃣ 通过API生成上游一周更新日志
@@ -185,7 +185,7 @@ jobs:
       run: |
           cd immortalwrt/bin/targets/*/*
           rm -rf packages
-          df -hT  
+          df -hT
           echo "FIRMWARE_DIR=$PWD" >> $GITHUB_ENV
           echo "TIME1=$(TZ=${TZ} date '+%Y-%m-%d %H:%M:%S')" >> "$GITHUB_ENV"
 
@@ -210,7 +210,7 @@ jobs:
       if: env.UPLOAD_FIRMWARE == 'true'
       uses: actions/upload-artifact@v7
       with:
-          name: immortalwrt-25.12-X64-${{ github.run_number }}
+          name: immortalwrt-master-X64-${{ github.run_number }}
           path: ${{ env.FIRMWARE_DIR }}
 
     # 1️⃣4️⃣ 创建 GitHub 发布版本
@@ -220,8 +220,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-          tag_name: immortalwrt-25.12-X64-${{ env.RELEASE_TAG }}
-          name: immortalwrt-25.12-X64-${{ env.RELEASE_TAG }}
+          tag_name: immortalwrt-master-X64-${{ env.RELEASE_TAG }}
+          name: immortalwrt-master-X64-${{ env.RELEASE_TAG }}
           body: |
             📦 编译时间段
             ⏰ 从 ${{ env.TIME0 }} 到 ${{ env.TIME1 }}
@@ -234,7 +234,7 @@ jobs:
     - name: 清理旧 Workflow 记录
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WORKFLOW_FILE: build_ImmortalWrt_25.12.yml
+        WORKFLOW_FILE: build_ImmortalWrt_matser.yml
         RETAIN_DAYS: 3
         KEEP_MINIMUM_RUNS: 3
       run: |
@@ -255,7 +255,7 @@ jobs:
       if: env.UPLOAD_RELEASE == 'true'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        RELEASE_PREFIX: immortalwrt-25.12-X64-
+        RELEASE_PREFIX: immortalwrt-master-X64-
         KEEP_LATEST: 8
       run: |
         gh release list --limit 100 --json tagName,createdAt \
@@ -273,13 +273,13 @@ jobs:
     - name: 保存上游更新缓存
       if: github.event_name == 'repository_dispatch' && github.event.client_payload.commit_hash != ''
       run: |
-        mkdir -p .cache/immortalwrt-25-12-group
-        echo "${{ github.event.client_payload.commit_hash }}" > .cache/immortalwrt-25-12-group/last_commit
+        mkdir -p .cache/immortalwrt-master-group
+        echo "${{ github.event.client_payload.commit_hash }}" > .cache/immortalwrt-master-group/last_commit
 
     - name: 缓存上游更新哈希
       if: github.event_name == 'repository_dispatch' && github.event.client_payload.commit_hash != ''
       continue-on-error: true
       uses: actions/cache/save@v5
       with:
-        path: .cache/immortalwrt-25-12-group
-        key: commit-immortalwrt-25-12-group-${{ github.event.client_payload.commit_hash }}
+        path: .cache/immortalwrt-master-group
+        key: commit-immortalwrt-master-group-${{ github.event.client_payload.commit_hash }}

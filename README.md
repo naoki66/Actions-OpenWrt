@@ -21,6 +21,7 @@
 | luci-app-wechatpush | [tty228/luci-app-wechatpush](https://github.com/tty228/luci-app-wechatpush) |
 | passwall | [Openwrt-Passwall/openwrt-passwall](https://github.com/Openwrt-Passwall/openwrt-passwall) |
 | rtp2httpd | [stackia/rtp2httpd](https://github.com/stackia/rtp2httpd) |
+| Open-Box | [liandu2024/Open-Box](https://github.com/liandu2024/Open-Box) |
 
 ## 目录结构
 
@@ -113,6 +114,22 @@ files/immortalwrt/etc/config/google_fu_mode
 
 空目录可以用 `.gitkeep` 保留；源码编译工作流在复制 `files/` 时会排除 `.gitkeep` 和 `.gitignore`，它们不会进入最终固件。
 
+## Open-Box 内置安装器
+
+ImmortalWrt 25.12 和 master X64 源码编译会内置 `luci-app-openbox`。该包不会提前占用 `/opt/open-box`，避免 Open-Box 官方安装脚本误判为已有完整安装；固件只预置 LuCI 入口、服务兜底页、后台安装器和官方 `install.sh`。
+
+刷机后可通过两种方式安装完整 Open-Box：
+
+```bash
+# LuCI：服务 -> Open-Box 安装 -> 镜像加速安装
+
+# SSH：走内置官方安装脚本
+openbox-install --mirror
+openbox-install --direct
+```
+
+LuCI 安装页会调用 `/usr/bin/openbox-bootstrap` 在后台运行安装，日志写入 `/tmp/openbox-install.log`，状态写入 `/tmp/openbox-install.status`。安装完成后打开 `http://<路由器IP>:2026` 设置面板密码。
+
 ## 增加软件包
 
 ### 源码编译工作流
@@ -189,6 +206,25 @@ ImageBuilder 使用上游预编译基础镜像，只重新打包指定软件包�
 ImageBuilder 工作流常见内置组件包括 OpenClash、PassWall、mosdns、ddns-go、wechatpush、lucky、WireGuard、ttyd、dashboard、homeproxy、xray-core 和常用中文语言包。具体软件包以对应工作流中的 `PACKAGES` 参数为准。
 
 ## 本地编译参考
+
+Debian 本地按 workflow 编译：
+
+```bash
+# 默认顺序编译 25.12 和 master，并自动安装 Debian 依赖
+bash scripts/debian-build-from-workflow.sh
+
+# 只编译其中一个目标
+bash scripts/debian-build-from-workflow.sh --target 25.12
+bash scripts/debian-build-from-workflow.sh --target master
+
+# 指定工作目录、跳过依赖安装
+bash scripts/debian-build-from-workflow.sh --target master --work-root /mnt/openwrt-build --skip-deps
+
+# 只检查 yml 映射，不克隆源码、不编译
+bash scripts/debian-build-from-workflow.sh --dry-run
+```
+
+脚本会读取对应 `build_ImmortalWrt_*.yml` 的 `REPO_URL`、`REPO_BRANCH`、`CONFIG_FILE`、`DIY_P1_SH`、`DIY_P2_SH`，本地执行克隆源码、DIY、feeds、`make defconfig`、下载与编译步骤；会自动跳过 GitHub Actions 专用的 checkout、更新日志、上传产物、Release、缓存和工作流清理步骤。固件会复制到 `$HOME/actions-openwrt-build/artifacts/` 下。
 
 首次编译 ImmortalWrt：
 

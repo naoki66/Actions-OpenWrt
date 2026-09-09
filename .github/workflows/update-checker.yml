@@ -1,4 +1,4 @@
-﻿name: 检查上游commits更新并触发编译仓库
+name: 检查上游commits更新并触发编译仓库
 
 on:
   workflow_dispatch:
@@ -31,6 +31,10 @@ jobs:
             repo_id: immortalwrt
             url: https://github.com/immortalwrt/immortalwrt
             branch: openwrt-25.12
+          - id: immortalwrt-master-group
+            repo_id: immortalwrt
+            url: https://github.com/immortalwrt/immortalwrt
+            branch: master
           - id: lede-group
             repo_id: lede
             url: https://github.com/coolsnowwolf/lede
