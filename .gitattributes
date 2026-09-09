@@ -5,3 +5,10 @@
 *.config text eol=lf
 *.md text eol=lf
 docs/depends-ubuntu text eol=lf
+*.tar.gz binary
+*.tgz binary
+*.tar.xz binary
+*.txz binary
+*.tar.bz2 binary
+*.tbz2 binary
+*.zip binary

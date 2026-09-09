@@ -177,7 +177,31 @@ jobs:
           echo "可用磁盘:"
           df -hT
           set -o pipefail
-          make V=s -j2 2>&1 | tee compile.log | tail -200
+          if ! make V=s -j2 2>&1 | tee compile.log | tail -200; then
+            echo "::error::固件编译失败，下面打印 compile.log 中最早的错误上下文"
+            pattern='(ERROR:|Error [0-9]+|error:|fatal:|failed|No such file|not found|Permission denied|Killed|undefined reference|collect2|ninja: build stopped|make\[[0-9]+\]: \*\*\*)'
+            first_error="$(grep -nEi "$pattern" compile.log | head -n 1 | cut -d: -f1 || true)"
+            echo "::group::错误索引"
+            grep -nEi "$pattern" compile.log | head -n 120 || true
+            echo "::endgroup::"
+            if [ -n "$first_error" ]; then
+              start=$((first_error > 80 ? first_error - 80 : 1))
+              end=$((first_error + 160))
+              echo "::group::首个错误上下文 ${start}-${end}"
+              sed -n "${start},${end}p" compile.log || true
+              echo "::endgroup::"
+            fi
+            exit 1
+          fi
+
+    - name: 上传编译日志
+      if: failure() && steps.compile.conclusion == 'failure'
+      uses: actions/upload-artifact@v4
+      with:
+        name: immortalwrt-master-compile-log-${{ github.run_id }}
+        path: immortalwrt/compile.log
+        if-no-files-found: ignore
+        retention-days: 7
 
     # 1️⃣1️⃣ 整理固件
     - name: 整理输出路径

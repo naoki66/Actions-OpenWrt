@@ -3,7 +3,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-. "$SCRIPT_DIR/openbox-package.sh"
+. "$SCRIPT_DIR/add-luci-apps.sh"
 
 echo "=== 开始执行 DIY_P1_SH ==="
 
@@ -44,6 +44,6 @@ git clone --depth 1 https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
   exit 1
 }
 
-add_openbox_package
+import_add_luci_apps
 
 echo "=== DIY_P1_SH 执行完成 ==="

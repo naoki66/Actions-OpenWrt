@@ -60,6 +60,32 @@ die() {
   exit 1
 }
 
+summarize_compile_log() {
+  local log_file="$1"
+  local pattern='(ERROR:|Error [0-9]+|error:|fatal:|failed|No such file|not found|Permission denied|Killed|undefined reference|collect2|ninja: build stopped|make\[[0-9]+\]: \*\*\*)'
+  local first_error start end
+
+  [ -f "$log_file" ] || {
+    warn "Compile log not found: $log_file"
+    return 0
+  }
+
+  log "Compile failed; showing likely error lines from $log_file"
+  grep -nEi "$pattern" "$log_file" | head -n 120 || true
+
+  first_error="$(grep -nEi "$pattern" "$log_file" | head -n 1 | cut -d: -f1 || true)"
+  if [ -n "$first_error" ]; then
+    if [ "$first_error" -gt 80 ]; then
+      start=$((first_error - 80))
+    else
+      start=1
+    fi
+    end=$((first_error + 160))
+    log "First error context: lines $start-$end"
+    sed -n "${start},${end}p" "$log_file" || true
+  fi
+}
+
 trim_value() {
   local value="$1"
   value="${value%%#*}"
@@ -311,7 +337,10 @@ build_one_workflow() {
     run make download -j"$DOWNLOAD_JOBS"
     find dl -size -1024c -type f -print -delete
     log "Compiling with make V=s -j$COMPILE_JOBS"
-    make V=s -j"$COMPILE_JOBS" 2>&1 | tee "$log_dir/compile.log" | tail -200
+    if ! make V=s -j"$COMPILE_JOBS" 2>&1 | tee "$log_dir/compile.log" | tail -200; then
+      summarize_compile_log "$log_dir/compile.log"
+      exit 1
+    fi
   )
 
   firmware_dir="$(find "$source_dir/bin/targets" -mindepth 2 -maxdepth 2 -type d | head -n 1 || true)"
